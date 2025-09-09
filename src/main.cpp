@@ -1,6 +1,6 @@
-#include <SFML\Graphics.hpp>
+#pragma once
 
-#define v2f sf::Vector2f
+#include <config.h>
 
 int main(){
     sf::RenderWindow wind(sf::VideoMode({960,720}),"Test window");
