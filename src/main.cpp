@@ -1,5 +1,3 @@
-#pragma once
-
 #include <config.h>
 
 int main(){
@@ -12,16 +10,31 @@ int main(){
 
     text.move({128,128});
 
-    wind.clear({43,67,175});
-    wind.draw(text);
+    sf::Clock dt_clock;
+    float dt = 1.f/60.f;
 
-    wind.display();
+    wind.setFramerateLimit(60);
 
+    //main loop
     while(1){
+        dt_clock.start();
+        //update events
         while(const std::optional ev = wind.pollEvent()){
             if(ev->is<sf::Event::Closed>())
                 wind.close();
         }
+        updateControls();
+
+        //physics
+        text.move(64.f*v2f(getDirHeld())*dt);
+
+        //render
+        wind.clear({43,67,175});
+        wind.draw(text);
+
+        wind.display();
+
+        dt = dt_clock.reset().asSeconds();
     }
 
 }

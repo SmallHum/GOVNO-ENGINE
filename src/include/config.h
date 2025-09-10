@@ -4,7 +4,7 @@
 #include <SFML\Graphics.hpp>
 #include <SFML\Audio.hpp>
 
-//including stuff in panic
+//including other stuff in panic
 #include <windows.h>
 #include <cstdlib>
 #include <string>
@@ -18,3 +18,6 @@
 
 #define v2u sf::Vector2u
 #define v3u sf::Vector3u
+
+//my includes
+#include <controls.h>
