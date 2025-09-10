@@ -8,14 +8,15 @@ namespace controls{
 
         A_1 = 4,
         A_2 = 5,
-        A_3 = 6;
+        A_3 = 6,
+        A_CNSL = 7;
 
-    key acts[] = {VK_UP,VK_DOWN,VK_LEFT,VK_RIGHT,'Z','X','C'};
+    key acts[] = {VK_UP,VK_DOWN,VK_LEFT,VK_RIGHT,'Z','X','C',VK_F9};
 
-    bool states[7][3];
+    bool states[8][3];
 
     void updCtrls(){
-            for(int i = 0; i < 7; i++){
+            for(int i = 0; i < 8; i++){
                 states[i][0] = states[i][1];
                 states[i][1] = GetKeyState(acts[i]) & 0x8000;
                 states[i][2] = GetKeyState(acts[i]) & 1;

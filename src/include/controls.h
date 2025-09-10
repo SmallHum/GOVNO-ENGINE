@@ -12,7 +12,8 @@ namespace controls{
 
                 A_1,
                 A_2,
-                A_3;
+                A_3,
+                A_CNSL;
 
     extern key acts[];
 
@@ -21,7 +22,7 @@ namespace controls{
     //index 0 - previous held state
     //index 1 - current held state
     //index 2 - current toggled state
-    extern bool states[7][3];
+    extern bool states[8][3];
 
     //function for updating controls states
     void updCtrls();
@@ -50,3 +51,5 @@ namespace controls{
 #define ACT_1 controls::A_1
 #define ACT_2 controls::A_2
 #define ACT_3 controls::A_3
+
+#define ACT_CNSL controls::A_CNSL

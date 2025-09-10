@@ -1,6 +1,8 @@
 #include <config.h>
 
 int main(){
+    console::init();
+
     sf::RenderWindow wind(sf::VideoMode({960,720}),"Test window");
 
     sf::Font default_font("assets/font/cour.ttf");
@@ -14,24 +16,37 @@ int main(){
     float dt = 1.f/60.f;
 
     wind.setFramerateLimit(60);
+    
+    shared_ptr<Node> root = make_shared<Node>("root");
+    shared_ptr<Node> child_1 = make_shared<Node>("child_1");
+    shared_ptr<Node> child_2 = make_shared<Node>("child_2");
 
-    initConsole();
+    root->addChild(child_1);
+    root->addChild(child_2);
+
+    root->printTree();
 
     //main loop
     while(1){
         dt_clock.start();
         //update events
         while(const std::optional ev = wind.pollEvent()){
-            if(ev->is<sf::Event::Closed>())
+            if(ev->is<sf::Event::Closed>()){
                 wind.close();
+                console::destroy();
+                std::exit(0);
+            }
         }
         updateControls();
+
+        if(keyPressed(ACT_CNSL))
+            console::flip();
 
         //physics
         text.move(64.f*v2f(getDirHeld())*dt);
 
         //render
-        wind.clear({43,67,175});
+        wind.clear((console::is_open) ? sf::Color(43,67,175) : sf::Color(0,0,0));
         wind.draw(text);
 
         wind.display();

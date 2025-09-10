@@ -27,6 +27,7 @@ using std::cin, std::cout,
     std::vector,
     std::weak_ptr,
     std::shared_ptr,
+    std::make_shared,
     std::function;
 
 //my includes
