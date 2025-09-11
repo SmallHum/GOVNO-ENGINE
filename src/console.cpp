@@ -2,8 +2,19 @@
 
 namespace console{
     bool is_open = 0;
+    bool is_destroying = 0;
 
     HWND window;
+
+    thread parallel_input;
+
+    void inputHandle(){
+        int sas;
+        while(!is_destroying){
+            cin >> sas;
+            cout << sas << '\n';
+        }
+    }
 
     void init(){
         AllocConsole();
@@ -11,14 +22,18 @@ namespace console{
         window = FindWindowA("ConsoleWindowClass", NULL);
 
         freopen("CONOUT$", "w", stdout);
-        freopen("CONOUT$", "w", stdin);
+        freopen("CONIN$", "r", stdin);
         freopen("CONOUT$", "w", stderr);
 
         ShowWindow(window,0);
 
+        parallel_input = thread(inputHandle);
+
         cout << "GOVNO-ENGINE debug console.\n\n";
     }
     void destroy(){
+        is_destroying = 1;
+        parallel_input.join();
         FreeConsole();
     }
 

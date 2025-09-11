@@ -12,6 +12,7 @@
 #include <vector>
 #include <memory>
 #include <functional>
+#include <thread>
 
 #define v2f sf::Vector2f
 #define v3f sf::Vector3f
@@ -28,7 +29,8 @@ using std::cin, std::cout,
     std::weak_ptr,
     std::shared_ptr,
     std::make_shared,
-    std::function;
+    std::function,
+    std::thread;
 
 //my includes
 #include <controls.h>
