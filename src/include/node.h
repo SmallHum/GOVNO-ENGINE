@@ -6,8 +6,18 @@ struct Node : std::enable_shared_from_this<Node>{
     vector<shared_ptr<Node>> children;
     weak_ptr<Node> parent;
 
+    //Icon to display in print node tree.
+    char icon = 'Y';
+
+    //Determines if this tree needs to be processed.
+    //```process``` and ```physProcess``` functions, to be exact.
+    bool active = 0;
+
+    //Determines if this tree needs to be drawn.
+    bool visible = 1;
+
     //Index in parent's children array.
-    //Set to -1 by default, or if it has no parent.
+    //Set to ```-1``` by default, or if it has no parent.
     size_t parent_index = -1;
 
     string name;
@@ -19,8 +29,20 @@ struct Node : std::enable_shared_from_this<Node>{
     void removeChild(shared_ptr<Node> node);
     void removeChild(size_t index);
 
-    //Finds a node in child tree via "path/to/the/node"
-    //Returns nullptr if couldn't find the node
+    //Inherit functions
+
+    virtual void onCreation();
+
+    virtual void process();
+
+    virtual void physProcess(float delta);
+
+    virtual void onDeletion();
+
+    virtual void draw();
+
+    //Finds a node in child tree via ```"path/to/the/node"```.
+    //Returns ```nullptr``` if couldn't find the node.
     shared_ptr<Node> find(string path);
 
     void printTree(int spaces = 0);

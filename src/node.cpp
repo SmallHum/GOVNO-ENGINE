@@ -47,9 +47,31 @@ shared_ptr<Node> Node::find(string path){
 
 void Node::printTree(int spaces){
     for(int i = 0; i < spaces; i++) std::cout << "  ";
-    std::cout << name << '\n';
+    std::cout << icon << ' ' << name << '\n';
 
     for(auto& i : children) i->printTree(spaces+1);
+}
+
+void Node::onCreation(){}
+
+void Node::process(){
+    for(auto& i : children)
+        if(i->active)
+            i->process();
+}
+
+void Node::physProcess(float delta){
+    for(auto& i : children)
+        if(i->active)
+            i->physProcess(delta);
+}
+
+void Node::onDeletion(){}
+
+void Node::draw(){
+    for(auto& i : children)
+        if(i->visible)
+            i->draw();
 }
 
 Node::~Node(){

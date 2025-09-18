@@ -10,6 +10,7 @@
 #include <cstdlib>
 #include <string>
 #include <vector>
+#include <map>
 #include <memory>
 #include <functional>
 #include <thread>
@@ -26,6 +27,7 @@
 using std::cin, std::cout,
     std::string,
     std::vector,
+    std::map,
     std::weak_ptr,
     std::shared_ptr,
     std::make_shared,
@@ -33,6 +35,6 @@ using std::cin, std::cout,
     std::thread;
 
 //my includes
+#include <node.h>
 #include <controls.h>
 #include <console.h>
-#include <node.h>
