@@ -28,6 +28,23 @@ void Node::removeChild(size_t index){
     children.erase(children.begin() + index);
 }
 
+shared_ptr<Node> Node::find(string path){
+    size_t index = path.find_first_of('/');
+
+    string searched_name = path.substr(0,index),
+    next_path = path.substr(index + 1, path.size() - index);
+
+    for(auto &i : children){
+        if(i->name == searched_name){
+            if(index == -1)
+                return i;
+            return i->find(next_path);
+        }
+    }
+
+    return shared_ptr<Node>();
+}
+
 void Node::printTree(int spaces){
     for(int i = 0; i < spaces; i++) std::cout << "  ";
     std::cout << name << '\n';

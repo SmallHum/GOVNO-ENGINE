@@ -8,14 +8,13 @@ namespace console{
 
     thread parallel_input;
 
-    void inputHandle(){
-        int sas;
-        while(!is_destroying){
-            cin >> sas;
-            cout << sas << '\n';
-        }
+    void help(){
+        cout << "COMMANDS LIST:\n" <<
+        "   help - prints this menu\n" <<
+        "   find-node [path] - finds a node from the written path.\n" <<
+        "   make-node [class] [parent path] [arg 1] [arg 2] ... - creates a node\nof a specific class and adds it to an existing node.\n" <<
+        '\n';
     }
-
     void init(){
         AllocConsole();
 

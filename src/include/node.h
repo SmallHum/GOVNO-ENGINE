@@ -19,6 +19,10 @@ struct Node : std::enable_shared_from_this<Node>{
     void removeChild(shared_ptr<Node> node);
     void removeChild(size_t index);
 
+    //Finds a node in child tree via "path/to/the/node"
+    //Returns nullptr if couldn't find the node
+    shared_ptr<Node> find(string path);
+
     void printTree(int spaces = 0);
 
     ~Node();
