@@ -24,6 +24,8 @@
 #define v2u sf::Vector2u
 #define v3u sf::Vector3u
 
+#define mat3 sf::Transform
+
 using std::cin, std::cout,
     std::string,
     std::vector,

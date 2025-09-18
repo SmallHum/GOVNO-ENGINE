@@ -1,7 +1,5 @@
 #include <config.h>
 
-//test
-
 int main(){
     shared_ptr<Node> root = make_shared<Node>("root");
     shared_ptr<Node> child_1 = make_shared<Node>("child_1");
