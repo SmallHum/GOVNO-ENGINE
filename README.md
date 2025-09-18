@@ -41,10 +41,10 @@ Finds a node. Testing command.
 
 Example:
 
-```Y root```
-```  Y child_1```
-```    Y child_3```
-```  Y child_2```
+Y root
+  Y child_1
+    Y child_3
+  Y child_2
 
 ```find-node "child_1/child_3"```
 The console will tell that it found node ```child_3``` successfully.
