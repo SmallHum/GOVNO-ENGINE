@@ -5,7 +5,7 @@
 struct Node : std::enable_shared_from_this<Node>{
     vector<shared_ptr<Node>> children;
     weak_ptr<Node> parent;
-    
+
     string name;
 
     //Icon to display in print node tree.
@@ -21,7 +21,6 @@ struct Node : std::enable_shared_from_this<Node>{
     //Index in parent's children array.
     //Set to ```-1``` by default, or if it has no parent.
     size_t parent_index = -1;
-
 
     Node(string name = "Node");
 

@@ -19,12 +19,16 @@ namespace console{
         commands["make-node"] = makeNode;
         commands["delete-node"] = deleteNode;
         commands["info"] = info;
+        commands["edit"] = edit;
+        commands["print-tree"] = printTree;
 
         command_descriptions["help"] = "\tprints this list.";
         command_descriptions["find-node"] = "[path] \tfinds a node from root.";
-        command_descriptions["make-node"] = "[class] [parent path] [arg 1] [arg 2] ... \tmakes a node.";
+        command_descriptions["make-node"] = "[path] [class] [arg 1] [arg 2] ... \tmakes a node.";
         command_descriptions["delete-node"] = "[path] \tdeletes a node.";
         command_descriptions["info"] = "[path] \tShows node's variables.";
+        command_descriptions["edit"] = "[path] [var name] [new value] \tEdit node's variables.";
+        command_descriptions["print-tree"] = "\tPrints tree from root.";
     }
     
     void init(shared_ptr<Node> root_node){
@@ -46,10 +50,19 @@ namespace console{
 
         cout << "GOVNO-ENGINE debug console.\n\n";
     }
+    shared_ptr<Node> fromPath(){
+        string path;
+        cin >> path;
+        if((path.front() == '"' && path.back() == '"') ||
+        (path.front() == '\'' && path.back() == '\'')){
+            path.pop_back();
+            path.erase(path.begin());
+        }
+        return root->find(path);
+    }
     void inputHandle(){
         string command;
         while(!is_destroying){
-            root->printTree();
             cout << "> ";
             cin >> command;
             if(commands.find(command) == commands.end())
@@ -66,23 +79,22 @@ namespace console{
         cout << '\n';
     };
     function<void()> findNode = [](){
-        string path;
-        cin >> path;
-        shared_ptr<Node> result = root->find(path);
-        if(result)
-            cout << "Node found successfully! (" << result->name << ")\n\n";
-        else cout << "ERROR: invalid path.\n\n";
+        shared_ptr<Node> result = fromPath();
+        if(!result){
+            cout << "ERROR: invalid path.\n\n"; return;
+        }
+        cout << "Node found successfully! (" << result->name << ")\n\n";
     };
     function<void()> makeNode = [](){
-        string _class, parent_path, name;
+        string _class, name;
 
-        cin >> _class >> parent_path >> name;
-
-        shared_ptr<Node> node, parent = root->find(parent_path);
+        shared_ptr<Node> node, parent = fromPath();
 
         if(!parent) {
             cout << "ERROR: invalid parent path.\n\n"; return;
         }
+
+        cin >> _class >> name;
 
         if(_class == "Node"){
             node.reset(new Node(name));
@@ -95,12 +107,7 @@ namespace console{
         cout << "Node " << name << " created successfully!\n\n";
     };
     function<void()> deleteNode = [](){
-        string path;
-
-        cin >> path;
-
-        shared_ptr<Node> node = root->find(path);
-
+        shared_ptr<Node> node = fromPath();
         if(!node){
             cout << "ERROR: invalid path.\n\n"; return;
         }
@@ -110,18 +117,50 @@ namespace console{
         cout << "Node " << node->name << " removed successfully!\n\n";
     };
     function<void()> info = [](){
-        string path;
-
-        cin >> path;
-
-        shared_ptr<Node> node = root->find(path);
-
+        shared_ptr<Node> node = fromPath();
         if(!node){
             cout << "ERROR: invalid path.\n\n"; return;
         }
 
         node->printInfo();
         cout << '\n';
+    };
+    function<void()> edit = [](){
+        shared_ptr<Node> node = fromPath();
+        if(!node){
+            cout << "ERROR: invalid path.\n\n"; return;
+        }
+
+        string var_name;
+        cin >> var_name;
+
+        //I couldn't think of other solution...
+
+        //Node parameters
+        if(var_name == "name"){
+            string new_value;
+            cin >> new_value;
+            node->name = new_value;
+        }
+        else if(var_name == "active"){
+            bool new_value;
+            cin >> new_value;
+            node->active = new_value;
+        }
+        else if(var_name == "visible"){
+            bool new_value;
+            cin >> new_value;
+            node->visible = new_value;
+        }
+        else{
+            cout << "ERROR: invalid node variable.\n\n"; return;
+        }
+
+        cout << "Variable " << var_name << " was changed successfully!\n\n";
+        
+    };
+    function<void()> printTree = [](){
+        root->printTree();
     };
     void destroy(){
         is_destroying = 1;

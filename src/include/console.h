@@ -33,9 +33,17 @@ namespace console{
     //Shows info from node
     extern function<void()> info;
 
+    //Edit node's data
+    extern function<void()> edit;
+
+    //Print root tree
+    extern function<void()> printTree;
+
     void inputHandle();
 
     void init(shared_ptr<Node> root_node);
+
+    shared_ptr<Node> fromPath();
 
     void open();
     void close();

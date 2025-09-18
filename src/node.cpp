@@ -29,10 +29,17 @@ void Node::removeChild(size_t index){
 }
 
 shared_ptr<Node> Node::find(string path){
+    if(path.empty())
+        return shared_from_this();
+
     size_t index = path.find_first_of('/');
 
     string searched_name = path.substr(0,index),
     next_path = path.substr(index + 1, path.size() - index);
+
+    if(searched_name == ".."){
+        return parent.lock();
+    }
 
     for(auto &i : children){
         if(i->name == searched_name){
@@ -54,8 +61,8 @@ void Node::printTree(int spaces){
 void Node::printInfo(){
     cout << "Node:\n" <<
     " name: " << name << '\n' <<
-    " active: " << (active ? "True" : "False") << '\n' <<
-    " visible: " << (visible ? "True" : "False") << '\n';
+    " active: " << prettyBool(active) << '\n' <<
+    " visible: " << prettyBool(visible) << '\n';
 }
 
 void Node::onCreation(){}

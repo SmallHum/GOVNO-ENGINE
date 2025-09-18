@@ -38,3 +38,7 @@ using std::cin, std::cout,
 #include <node.h>
 #include <controls.h>
 #include <console.h>
+
+static inline string prettyBool(bool a){
+    return a ? "True" : "False";
+}
