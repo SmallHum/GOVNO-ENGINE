@@ -18,11 +18,13 @@ namespace console{
         commands["find-node"] = findNode;
         commands["make-node"] = makeNode;
         commands["delete-node"] = deleteNode;
+        commands["info"] = info;
 
         command_descriptions["help"] = "\tprints this list.";
-        command_descriptions["find-node"] = "[path] \tfinds a node from root";
-        command_descriptions["make-node"] = "[class] [parent path] [arg 1] [arg 2] ... \tmakes a node";
-        command_descriptions["delete-node"] = "[path] \tdeletes a node";
+        command_descriptions["find-node"] = "[path] \tfinds a node from root.";
+        command_descriptions["make-node"] = "[class] [parent path] [arg 1] [arg 2] ... \tmakes a node.";
+        command_descriptions["delete-node"] = "[path] \tdeletes a node.";
+        command_descriptions["info"] = "[path] \tShows node's variables.";
     }
     
     void init(shared_ptr<Node> root_node){
@@ -106,6 +108,20 @@ namespace console{
         node->parent.lock()->removeChild(node);
 
         cout << "Node " << node->name << " removed successfully!\n\n";
+    };
+    function<void()> info = [](){
+        string path;
+
+        cin >> path;
+
+        shared_ptr<Node> node = root->find(path);
+
+        if(!node){
+            cout << "ERROR: invalid path.\n\n"; return;
+        }
+
+        node->printInfo();
+        cout << '\n';
     };
     void destroy(){
         is_destroying = 1;

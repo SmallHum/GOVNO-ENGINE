@@ -30,6 +30,9 @@ namespace console{
     //Delets a node from path/to/node
     extern function<void()> deleteNode;
 
+    //Shows info from node
+    extern function<void()> info;
+
     void inputHandle();
 
     void init(shared_ptr<Node> root_node);

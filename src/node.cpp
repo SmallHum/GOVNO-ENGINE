@@ -51,6 +51,12 @@ void Node::printTree(int spaces){
 
     for(auto& i : children) i->printTree(spaces+1);
 }
+void Node::printInfo(){
+    cout << "Node:\n" <<
+    " name: " << name << '\n' <<
+    " active: " << (active ? "True" : "False") << '\n' <<
+    " visible: " << (visible ? "True" : "False") << '\n';
+}
 
 void Node::onCreation(){}
 
