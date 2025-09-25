@@ -1,4 +1,4 @@
-#include <node.h>
+#include <spatial.h>
 
 Node::Node(string name): name(name){
     std::cout << "Node " << name << " constructed." << '\n';
@@ -13,6 +13,10 @@ void Node::addChild(shared_ptr<Node> node){
     node->parent = shared_from_this();
     node->parent_index = children.size();
     children.push_back(node);
+
+    Spatial *spat_node = dynamic_cast<Spatial*>(node.get());
+    if(spat_node)
+        spat_node->updateTransform();
 }
 
 void Node::removeChild(shared_ptr<Node> node){
@@ -85,6 +89,11 @@ void Node::draw(){
     for(auto& i : children)
         if(i->visible)
             i->draw();
+}
+
+void Node::drawDebug(){
+    for(auto& i : children)
+        i->drawDebug();
 }
 
 Node::~Node(){
