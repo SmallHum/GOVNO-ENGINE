@@ -13,9 +13,7 @@ int main(){
 
     console::init(root);
 
-    sf::Font default_font("assets/font/cour.ttf");
-
-    sf::Text text(default_font,"If you're reading this, \ni, Max Aplex, am already dead.\nLife in Hiroshima was great,\nuntil 1945 of corse. I should've\ndied, but instead, i've turned red.\nNow i don't have any\nother things to do, but to \nclose every door i see.");
+    sf::Text text(viewport::default_font,"If you're reading this, \ni, Max Aplex, am already dead.\nLife in Hiroshima was great,\nuntil 1945 of corse. I should've\ndied, but instead, i've turned red.\nNow i don't have any\nother things to do, but to \nclose every door i see.");
     text.setFillColor({255,255,255});
 
     text.move({128,128});
@@ -23,15 +21,17 @@ int main(){
     sf::Clock dt_clock;
     float dt = 1.f/60.f;
 
-    wind.setFramerateLimit(60);
+    viewport::init({960,720});
+
+    viewport::wind.setFramerateLimit(60);
 
     //main loop
     while(1){
         dt_clock.start();
         //update events
-        while(const std::optional ev = wind.pollEvent()){
+        while(const std::optional ev = viewport::wind.pollEvent()){
             if(ev->is<sf::Event::Closed>()){
-                wind.close();
+                viewport::exit();
                 console::destroy();
                 std::exit(0);
             }
@@ -45,10 +45,12 @@ int main(){
         text.move(64.f*v2f(getDirHeld())*dt);
 
         //render
-        wind.clear((console::is_open) ? sf::Color(43,67,175) : sf::Color(0,0,0));
-        wind.draw(text);
 
-        wind.display();
+        viewport::bg_color = (console::is_open) ? sf::Color(43,67,175) : sf::Color(0,0,0);
+
+        viewport::pushDrawable(&text);
+
+        viewport::display();
 
         dt = dt_clock.reset().asSeconds();
     }

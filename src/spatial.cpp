@@ -8,11 +8,11 @@ Spatial::Spatial(string name, v2f pos, float angle, v2f scale):
                 updateTransform();
 }
 
-inline void Spatial::updateLocalTransform(){
+void Spatial::updateLocalTransform(){
     local_transform = sf::Transform().scale(scale).rotate(sf::degrees(angle)).translate(pos);
 }
 
-inline void Spatial::updateTransform(){
+void Spatial::updateTransform(){
     updateLocalTransform();
 
     Spatial* spar = dynamic_cast<Spatial*>(parent.lock().get());

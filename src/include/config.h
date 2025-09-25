@@ -39,9 +39,10 @@ using std::cin, std::cout,
     std::priority_queue;
 
 //my includes
-#include <node.h>
+#include <spatial.h>
 #include <controls.h>
 #include <console.h>
+#include <graphics.h>
 
 static inline string prettyBool(bool a){
     return a ? "True" : "False";

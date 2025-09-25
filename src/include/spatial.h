@@ -14,9 +14,9 @@ struct Spatial : Node{
 
     Spatial(string name, v2f pos, float angle = 0.f, v2f scale = {1.f,1.f});
 
-    inline void updateLocalTransform();
+    void updateLocalTransform();
 
-    inline void updateTransform();
+    void updateTransform();
 
     mat3 getGlobalTransform();
 
