@@ -10,6 +10,7 @@
 #include <cstdlib>
 #include <string>
 #include <vector>
+#include <queue>
 #include <map>
 #include <memory>
 #include <functional>
@@ -34,7 +35,8 @@ using std::cin, std::cout,
     std::shared_ptr,
     std::make_shared,
     std::function,
-    std::thread;
+    std::thread,
+    std::priority_queue;
 
 //my includes
 #include <node.h>
