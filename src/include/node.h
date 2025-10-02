@@ -40,6 +40,7 @@ struct Node : std::enable_shared_from_this<Node>{
     virtual void onDeletion();
 
     virtual void draw();
+    virtual void drawDebug();
 
     //Finds a node in child tree via ```"path/to/the/node"```.
     //Returns ```nullptr``` if couldn't find the node.

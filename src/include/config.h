@@ -10,6 +10,7 @@
 #include <cstdlib>
 #include <string>
 #include <vector>
+#include <queue>
 #include <map>
 #include <memory>
 #include <functional>
@@ -24,6 +25,8 @@
 #define v2u sf::Vector2u
 #define v3u sf::Vector3u
 
+#define mat3 sf::Transform
+
 using std::cin, std::cout,
     std::string,
     std::vector,
@@ -32,13 +35,29 @@ using std::cin, std::cout,
     std::shared_ptr,
     std::make_shared,
     std::function,
-    std::thread;
+    std::thread,
+    std::priority_queue;
 
 //my includes
-#include <node.h>
+#include <spatial.h>
 #include <controls.h>
 #include <console.h>
+#include <graphics.h>
+
+const static int debug_info_z = 9999;
 
 static inline string prettyBool(bool a){
     return a ? "True" : "False";
+}
+
+template <typename T>
+static std::ostream& operator << (std::ostream& s, sf::Vector2<T> v){
+    s << v.x << ' ' << v.y;
+    return s;
+}
+
+static std::ostream& operator << (std::ostream& s, mat3 v){
+    for(int i = 0; i < 16; i++)
+        s << v.getMatrix()[i] << ' ';
+    return s;
 }
