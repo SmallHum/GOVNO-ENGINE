@@ -10,7 +10,7 @@ namespace console{
     //Console window handle
     extern HWND window;
 
-    extern shared_ptr<Node> root;
+    extern weak_ptr<Node> root;
 
     extern map<string,function<void()>> commands;
     extern map<string,string> command_descriptions;
@@ -42,6 +42,9 @@ namespace console{
 
     //Switch debug flags
     extern function<void()> debug;
+
+    //Change directory
+    extern function<void()> cd;
 
     void inputHandle();
 

@@ -6,7 +6,7 @@ namespace console{
 
     HWND window;
 
-    shared_ptr<Node> root;
+    weak_ptr<Node> root;
 
     map<string,function<void()>> commands;
     map<string,string> command_descriptions;
@@ -22,6 +22,7 @@ namespace console{
         commands["edit"] = edit;
         commands["print-tree"] = printTree;
         commands["debug"] = debug;
+        commands["cd"] = cd;
 
         command_descriptions["help"] = "\tPrints this list.";
         command_descriptions["find-node"] = "[path] \tFinds a node from root.";
@@ -31,10 +32,11 @@ namespace console{
         command_descriptions["edit"] = "[path] [var name] [new value] \tEdit node's variables.";
         command_descriptions["print-tree"] = "\tPrints tree from root.";
         command_descriptions["debug"] = "[option] \tFlips the debug info display flags.";
+        command_descriptions["cd"] = "[path] \tChanges directory.";
     }
     
     void init(shared_ptr<Node> root_node){
-        root.reset(root_node.get());
+        root = root_node;
 
         initCommands();
 
@@ -60,12 +62,12 @@ namespace console{
             path.pop_back();
             path.erase(path.begin());
         }
-        return root->find(path);
+        return root.lock()->find(path);
     }
     void inputHandle(){
         string command;
         while(!is_destroying){
-            cout << "> ";
+            cout << root.lock()->name << " > ";
             cin >> command;
             if(commands.find(command) == commands.end())
                 cout << "ERROR: unknown command. Type 'help' to list existing commands.\n\n";
@@ -202,7 +204,7 @@ namespace console{
         
     };
     function<void()> printTree = [](){
-        root->printTree();
+        root.lock()->printTree();
     };
     function<void()> debug = [](){
         string option;
@@ -225,6 +227,14 @@ namespace console{
             cout << "ERROR: invalid option.\n\n"; return;
         }
         cout << "Debug flag switched successfuly!\n\n";
+    };
+    function<void()> cd = [](){
+        shared_ptr<Node> node = fromPath();
+        if(!node){
+            cout << "ERROR: invalid path.\n\n"; return;
+        }
+
+        root = node;
     };
     void destroy(){
         // PostMessage(window, WM_CLOSE, 0, 0);
