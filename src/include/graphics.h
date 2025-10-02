@@ -43,7 +43,12 @@ namespace viewport{
 
     void display();
 
-    void pushDrawable(sf::Drawable *d, mat3 transform = mat3(), int z = 0);
+    //Adds draw data to the queue, which is sorted by key Z
+    void pushDrawable(sf::Drawable *d, int z = 0, mat3 transform = mat3());
+
+    //Unlike pushDrawable, this function draws data on screen instantly.
+    //Usually it's used to draw debug info.
+    void instaDraw(sf::Drawable *d, mat3 transform = mat3());
 
     void exit();
 };

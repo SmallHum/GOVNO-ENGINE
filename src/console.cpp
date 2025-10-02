@@ -70,6 +70,7 @@ namespace console{
             else
                 commands[command]();
         }
+        std::terminate();
     }
     function<void()> help = [](){
         cout << "COMMANDS LIST:\n";
@@ -163,9 +164,23 @@ namespace console{
         root->printTree();
     };
     void destroy(){
+        // PostMessage(window, WM_CLOSE, 0, 0);
+        open();
         is_destroying = 1;
-        parallel_input.join();
+        parallel_input.detach();
+        CloseWindow(window);
+
+        // GetProcAddress
+        DWORD pid = 0;
+        GetWindowThreadProcessId(window, &pid);
+
         FreeConsole();
+
+        HANDLE proc = OpenProcess(PROCESS_TERMINATE, FALSE, pid);
+        if (proc) {
+            TerminateProcess(proc, 0);
+            CloseHandle(proc);
+        }
     }
 
     void open(){

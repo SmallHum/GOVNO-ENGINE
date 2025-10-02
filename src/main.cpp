@@ -1,14 +1,31 @@
 #include <config.h>
 
+void exitEverything(){
+    viewport::exit();
+    console::destroy();
+}
+
 int main(){
     shared_ptr<Node> root = make_shared<Node>("root");
-    shared_ptr<Node> child_1 = make_shared<Node>("child_1");
+    shared_ptr<Node> spatial_1 = make_shared<Spatial>(
+        "spatial_1", 
+        v2f(128.f,128.f),
+        0,
+        v2f(1.f, 1.f),
+        sf::Color::Green
+    );
     shared_ptr<Node> child_2 = make_shared<Node>("child_2");
-    shared_ptr<Node> sasihui = make_shared<Node>("sasihui");
+    shared_ptr<Node> sasihui = make_shared<Spatial>(
+        "sasihui", 
+        v2f(128.f,-64.f),
+        0,
+        v2f(1.0f, 1.f),
+        sf::Color::Green
+    );
 
-    child_2->addChild(sasihui);
+    spatial_1->addChild(sasihui);
 
-    root->addChild(child_1);
+    root->addChild(spatial_1);
     root->addChild(child_2);
 
     console::init(root);
@@ -26,14 +43,12 @@ int main(){
     viewport::wind.setFramerateLimit(60);
 
     //main loop
-    while(1){
+    while(viewport::wind.isOpen()){
         dt_clock.start();
         //update events
         while(const std::optional ev = viewport::wind.pollEvent()){
             if(ev->is<sf::Event::Closed>()){
-                viewport::exit();
-                console::destroy();
-                std::exit(0);
+                exitEverything();
             }
         }
         updateControls();
@@ -48,11 +63,17 @@ int main(){
 
         viewport::bg_color = (console::is_open) ? sf::Color(43,67,175) : sf::Color(0,0,0);
 
-        viewport::pushDrawable(&text);
+        root->draw();
+        root->drawDebug();
+
+        dynamic_cast<Spatial*>(spatial_1.get())->angle += 2*16.f * dt;
+        dynamic_cast<Spatial*>(sasihui.get())->angle -= 2*12.f * dt;
+        dynamic_cast<Spatial*>(spatial_1.get())->updateTransform();
+        dynamic_cast<Spatial*>(sasihui.get())->updateTransform();
 
         viewport::display();
 
         dt = dt_clock.reset().asSeconds();
     }
-
+    exitEverything();
 }

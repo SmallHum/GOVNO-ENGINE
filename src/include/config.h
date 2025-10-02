@@ -44,6 +44,20 @@ using std::cin, std::cout,
 #include <console.h>
 #include <graphics.h>
 
+const static int debug_info_z = 9999;
+
 static inline string prettyBool(bool a){
     return a ? "True" : "False";
+}
+
+template <typename T>
+static std::ostream& operator << (std::ostream& s, sf::Vector2<T> v){
+    s << v.x << ' ' << v.y;
+    return s;
+}
+
+static std::ostream& operator << (std::ostream& s, mat3 v){
+    for(int i = 0; i < 16; i++)
+        s << v.getMatrix()[i] << ' ';
+    return s;
 }

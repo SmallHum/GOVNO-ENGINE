@@ -30,17 +30,20 @@ namespace viewport{
 
     void display(){
         while(!draw_queue.empty()){
-            
-            wind.clear(bg_color);
             DrawInfo curr = draw_queue.top();
             wind.draw(*curr.d, sf::RenderStates(curr.transform));
             draw_queue.pop();
         }
         wind.display();
+        wind.clear(bg_color);
     }
 
-    void pushDrawable(sf::Drawable *d, mat3 transform, int z){
+    void pushDrawable(sf::Drawable *d, int z, mat3 transform){
         draw_queue.push({d, transform, z});
+    }
+
+    void instaDraw(sf::Drawable *d, mat3 transform){
+        wind.draw(*d, sf::RenderStates(transform));
     }
 
     void exit(){

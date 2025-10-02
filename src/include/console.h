@@ -7,6 +7,7 @@ struct Node;
 namespace console{
     extern bool is_open, is_destroying;
 
+    //Console window handle
     extern HWND window;
 
     extern shared_ptr<Node> root;
