@@ -13,7 +13,7 @@ struct Node : std::enable_shared_from_this<Node>{
 
     //Determines if this tree needs to be processed.
     //```process``` and ```physProcess``` functions, to be exact.
-    bool active = 0;
+    bool active = 1;
 
     //Determines if this tree needs to be drawn.
     bool visible = 1;
@@ -47,7 +47,7 @@ struct Node : std::enable_shared_from_this<Node>{
     shared_ptr<Node> find(string path);
 
     void printTree(int spaces = 0);
-    virtual void printInfo();
+    virtual void printInfo(std::ostream& s);
 
     ~Node();
 };

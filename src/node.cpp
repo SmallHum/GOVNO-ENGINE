@@ -62,8 +62,8 @@ void Node::printTree(int spaces){
 
     for(auto& i : children) i->printTree(spaces+1);
 }
-void Node::printInfo(){
-    cout << "Node:\n" <<
+void Node::printInfo(std::ostream& s){
+    s << "Node:\n" <<
     " name: " << name << '\n' <<
     " active: " << prettyBool(active) << '\n' <<
     " visible: " << prettyBool(visible) << '\n';

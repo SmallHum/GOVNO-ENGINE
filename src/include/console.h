@@ -40,6 +40,9 @@ namespace console{
     //Print root tree
     extern function<void()> printTree;
 
+    //Switch debug flags
+    extern function<void()> debug;
+
     void inputHandle();
 
     void init(shared_ptr<Node> root_node);

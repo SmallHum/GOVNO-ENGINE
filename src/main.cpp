@@ -20,7 +20,7 @@ int main(){
         v2f(128.f,-64.f),
         0,
         v2f(1.0f, 1.f),
-        sf::Color::Green
+        sf::Color::Red
     );
 
     spatial_1->addChild(sasihui);
@@ -63,15 +63,14 @@ int main(){
 
         viewport::bg_color = (console::is_open) ? sf::Color(43,67,175) : sf::Color(0,0,0);
 
+        dynamic_cast<Spatial*>(spatial_1.get())->angle += 2*16.f * dt;
+        dynamic_cast<Spatial*>(sasihui.get())->angle -= 2*12.f * dt;
+
+        root->process();
         root->draw();
         root->drawDebug();
 
-        dynamic_cast<Spatial*>(spatial_1.get())->angle += 2*16.f * dt;
-        dynamic_cast<Spatial*>(sasihui.get())->angle -= 2*12.f * dt;
-        dynamic_cast<Spatial*>(spatial_1.get())->updateTransform();
-        dynamic_cast<Spatial*>(sasihui.get())->updateTransform();
-
-        viewport::display();
+        viewport::display(dt);
 
         dt = dt_clock.reset().asSeconds();
     }

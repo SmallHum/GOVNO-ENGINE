@@ -21,14 +21,16 @@ namespace console{
         commands["info"] = info;
         commands["edit"] = edit;
         commands["print-tree"] = printTree;
+        commands["debug"] = debug;
 
-        command_descriptions["help"] = "\tprints this list.";
-        command_descriptions["find-node"] = "[path] \tfinds a node from root.";
-        command_descriptions["make-node"] = "[path] [class] [arg 1] [arg 2] ... \tmakes a node.";
-        command_descriptions["delete-node"] = "[path] \tdeletes a node.";
+        command_descriptions["help"] = "\tPrints this list.";
+        command_descriptions["find-node"] = "[path] \tFinds a node from root.";
+        command_descriptions["make-node"] = "[path] [class] [arg 1] [arg 2] ... \tMakes a node.";
+        command_descriptions["delete-node"] = "[path] \tDeletes a node.";
         command_descriptions["info"] = "[path] \tShows node's variables.";
         command_descriptions["edit"] = "[path] [var name] [new value] \tEdit node's variables.";
         command_descriptions["print-tree"] = "\tPrints tree from root.";
+        command_descriptions["debug"] = "[option] \tFlips the debug info display flags.";
     }
     
     void init(shared_ptr<Node> root_node){
@@ -101,6 +103,20 @@ namespace console{
             node.reset(new Node(name));
             parent->addChild(node);
         }
+        if(_class == "Spatial"){
+            float pos_x, pos_y, angle, scale_x, scale_y;
+            int r, g, b;
+            cin >> pos_x >> pos_y >> angle >> scale_x >> scale_y >> r >> g >> b;
+
+            node.reset(new Spatial(
+                name, 
+                v2f(pos_x,pos_y), 
+                angle, 
+                v2f(scale_x, scale_y), 
+                sf::Color(r,g,b)
+            ));
+            parent->addChild(node);
+        }
         else {
             cout << "ERROR: invalid class.\n\n"; return;
         }
@@ -123,7 +139,7 @@ namespace console{
             cout << "ERROR: invalid path.\n\n"; return;
         }
 
-        node->printInfo();
+        node->printInfo(cout);
         cout << '\n';
     };
     function<void()> edit = [](){
@@ -131,6 +147,8 @@ namespace console{
         if(!node){
             cout << "ERROR: invalid path.\n\n"; return;
         }
+
+        Spatial* spatial = dynamic_cast<Spatial*>(node.get());
 
         string var_name;
         cin >> var_name;
@@ -153,15 +171,60 @@ namespace console{
             cin >> new_value;
             node->visible = new_value;
         }
+        else if(spatial){
+            if(var_name == "pos"){
+                float x,y;
+                cin >> x >> y;
+                spatial->pos = v2f(x,y);
+            }
+            else if(var_name == "angle"){
+                float new_value;
+                cin >> new_value;
+                spatial->angle = new_value;
+            }
+            else if(var_name == "scale"){
+                float x,y;
+                cin >> x >> y;
+                spatial->scale = v2f(x,y);
+            }
+            else if(var_name == "debug-color"){
+                int r, g, b;
+                cin >> r >> g >> b;
+                spatial->debug_color = sf::Color(r,g,b);
+            }
+        }
         else{
             cout << "ERROR: invalid node variable.\n\n"; return;
         }
+        
 
         cout << "Variable " << var_name << " was changed successfully!\n\n";
         
     };
     function<void()> printTree = [](){
         root->printTree();
+    };
+    function<void()> debug = [](){
+        string option;
+        cin >> option;
+        if(option == "-")
+            viewport::showAll();
+        else if(option == "show-fps")
+            viewport::showFps();
+        else if(option == "show-spatial-name")
+            viewport::showSpatialName();
+        else if(option == "show-spatial-origin")
+            viewport::showSpatialOrigin();
+        else if(option == "show-picked-node-info")
+            viewport::showPickedNodeInfo();
+        else if(option == "show-sprite-bounds")
+            viewport::showSpriteBounds();
+        else if(option == "show-aabb-bounds")
+            viewport::showAABBBounds();
+        else{
+            cout << "ERROR: invalid option.\n\n"; return;
+        }
+        cout << "Debug flag switched successfuly!\n\n";
     };
     void destroy(){
         // PostMessage(window, WM_CLOSE, 0, 0);

@@ -36,17 +36,27 @@ v2f Spatial::getGlobalPos(){
     return v2f(global_transform.getMatrix()[12],global_transform.getMatrix()[13]);
 }
 
-// 0  1  2  3
-// 4  5  6  7
-// 8  9  10 11
-// 12 13 14 15
-
 void Spatial::drawDebug(){
+    Node::drawDebug();
     viewport::spatial_name.setFillColor(debug_color);
     viewport::spatial_name.setString(name);
-    viewport::spatial_origin.setOutlineColor(debug_color);
-    viewport::instaDraw(&viewport::spatial_name, getGlobalTransform());
-    viewport::instaDraw(&viewport::spatial_origin, getGlobalTransform());
-    for(auto& i : children)
-        i->drawDebug();
+    if(viewport::show_spatial_name)
+        viewport::instaDraw(&viewport::spatial_name, mat3().translate(getGlobalPos()));
+    if(viewport::show_spatial_origin){
+        viewport::instaDraw(&viewport::axis_x, global_transform);
+        viewport::instaDraw(&viewport::axis_y, global_transform);
+    }
+}
+
+void Spatial::process(){
+    updateTransform();
+    Node::process();
+}
+
+void Spatial::printInfo(std::ostream& s){
+    Node::printInfo(s);
+    s << "Spatial:\n" <<
+    " pos: " << pos << '\n' <<
+    " angle: " << angle << '\n' <<
+    " scale: " << scale << '\n';
 }

@@ -25,4 +25,8 @@ struct Spatial : Node{
     v2f getGlobalPos();
 
     virtual void drawDebug() override;
+
+    virtual void process() override;
+
+    virtual void printInfo(std::ostream& s) override;
 };

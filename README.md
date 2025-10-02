@@ -19,6 +19,16 @@ avaliable variables:
 ```bool visible``` - determines if this tree should be drawn.
 ```bool active``` - determines if this tree should be processed.
 
+Spatial - inherits Node, has a spatial transform.
+
+icon: ```*```
+
+avaliable variables:
+
+```vec2f pos```
+```float angle``` - 
+```vec2f scale``` - determines if this tree should be processed.
+
 That's it for now.
 
 # Console

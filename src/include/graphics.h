@@ -31,17 +31,18 @@ namespace viewport{
          show_sprite_bounds,
          show_aabb_bounds;
 
-    extern sf::CircleShape spatial_origin;
     extern sf::Text spatial_name,
                 node_info;
     extern sf::RectangleShape sprite_bounds(),
                         aabb_bounds();
+    extern sf::VertexArray axis_x;
+    extern sf::VertexArray axis_y;
 
     extern priority_queue<DrawInfo> draw_queue;
 
     void init(v2u res, string name = "TEST WINDOW");
 
-    void display();
+    void display(float dt);
 
     //Adds draw data to the queue, which is sorted by key Z
     void pushDrawable(sf::Drawable *d, int z = 0, mat3 transform = mat3());
@@ -49,6 +50,15 @@ namespace viewport{
     //Unlike pushDrawable, this function draws data on screen instantly.
     //Usually it's used to draw debug info.
     void instaDraw(sf::Drawable *d, mat3 transform = mat3());
+
+    void showFps();
+    void showSpatialName();
+    void showSpatialOrigin();
+    void showPickedNodeInfo();
+    void showSpriteBounds();
+    void showAABBBounds();
+
+    void showAll();
 
     void exit();
 };
