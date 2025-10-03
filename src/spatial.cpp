@@ -12,6 +12,7 @@ Spatial::Spatial(string name, v2f pos, float angle, v2f scale, sf::Color debug_c
             scale(scale),
             debug_color(debug_color){
                 updateTransform();
+                Node::icon = (unsigned char)192;
 }
 
 void Spatial::updateLocalTransform(){

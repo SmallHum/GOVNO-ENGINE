@@ -27,8 +27,10 @@ namespace viewport{
     priority_queue<DrawInfo> draw_queue;
 
     void init(v2u res, string name){
-        default_font.setSmooth(0);
         wind = sf::RenderWindow(sf::VideoMode(res),name);
+        wind.setFramerateLimit(60);
+
+        default_font.setSmooth(0);
         fps_text.move(v2f(16.f,16.f));
         fps_text.setCharacterSize(16);
         spatial_name.setCharacterSize(16);

@@ -2,6 +2,7 @@
 
 Node::Node(string name): name(name){
     std::cout << "Node " << name << " constructed." << '\n';
+    icon = (unsigned char)249;
 }
 
 void Node::addChild(shared_ptr<Node> node){

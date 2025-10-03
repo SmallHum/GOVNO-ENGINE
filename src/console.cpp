@@ -52,6 +52,10 @@ namespace console{
 
         parallel_input = thread(inputHandle);
 
+        // for(unsigned char i = 0; i < 255; i++)
+        //     cout << (int)i << ' ' << i << '\n';
+        // cout << '\n';
+
         cout << "GOVNO-ENGINE debug console.\n\n";
     }
     shared_ptr<Node> fromPath(){

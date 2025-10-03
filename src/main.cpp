@@ -40,8 +40,6 @@ int main(){
 
     viewport::init({960,720});
 
-    viewport::wind.setFramerateLimit(60);
-
     //main loop
     while(viewport::wind.isOpen()){
         dt_clock.start();

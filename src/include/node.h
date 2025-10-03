@@ -9,7 +9,7 @@ struct Node : std::enable_shared_from_this<Node>{
     string name;
 
     //Icon to display in print node tree.
-    char icon = 'Y';
+    char icon;
 
     //Determines if this tree needs to be processed.
     //```process``` and ```physProcess``` functions, to be exact.

@@ -11,7 +11,7 @@ Node - basic struct that can have children and a parent.
 
 construction: ```string name```
 
-icon: ```Y```
+icon: ```.```
 
 avaliable variables:
 
@@ -19,9 +19,9 @@ avaliable variables:
 ```bool visible``` - determines if this tree should be drawn.
 ```bool active``` - determines if this tree should be processed.
 
-Spatial - inherits Node, has a spatial transform.
+Spatial - inherits Node, has a spatial transform. It's spatial children recursively inherit its parent's transform.
 
-icon: ```*```
+icon: ```└```
 
 avaliable variables:
 
@@ -89,3 +89,18 @@ Avaliable variables are listed above in the struct tree section.
 
 ```edit [path] [var name] [new value]```
 Edit node's avaliable variables.
+
+
+```debug [option]```
+Currently this command allows you to switch flags that are responsible for displaying debug data.
+You can type ```-``` to switch all of them.
+Flags include:
+
+```show-fps``` - Show FPS at the top-left side of the screen.
+```show-spatial-origin``` - Show X and Y axies of a Spatial transform.
+```show-spatial-name``` - Show Spatial's name next to it's position.
+```show-picked-node-info``` - Show info of a Node found via ```info``` command. The difference is that it's in real time.
+
+
+```cd [path]```
+CMD change directory, just for the node tree.

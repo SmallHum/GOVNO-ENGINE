@@ -3,7 +3,7 @@
 #include <node.h>
 
 struct Spatial : Node{
-    char icon = '*';
+    char icon;
 
     mat3 local_transform;
     mat3 global_transform;
