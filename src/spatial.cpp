@@ -1,4 +1,4 @@
-#include <spatial.h>
+#include <structs/spatial.h>
 
 namespace viewport{
     extern sf::CircleShape spatial_origin;

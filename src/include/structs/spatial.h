@@ -1,6 +1,6 @@
 #pragma once
 
-#include <node.h>
+#include <structs/node.h>
 
 struct Spatial : Node{
     char icon;

@@ -1,4 +1,4 @@
-#include <spatial.h>
+#include <structs/spatial.h>
 
 Node::Node(string name): name(name){
     std::cout << "Node " << name << " constructed." << '\n';

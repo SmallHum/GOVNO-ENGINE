@@ -1,6 +1,6 @@
 #include <config.h>
 
-void exitEverything(){
+void exit(){
     viewport::exit();
     console::destroy();
 }
@@ -29,7 +29,7 @@ int main(){
         //update events
         while(const std::optional ev = viewport::wind.pollEvent()){
             if(ev->is<sf::Event::Closed>()){
-                exitEverything();
+                exit();
             }
         }
         updateControls();
@@ -51,5 +51,5 @@ int main(){
 
         dt = dt_clock.reset().asSeconds();
     }
-    exitEverything();
+    exit();
 }
