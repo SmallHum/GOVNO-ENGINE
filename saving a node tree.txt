@@ -1,0 +1,40 @@
+сохраняться ноды будут начиная с детей
+то есть рекурсивная функция будет типа такого чё то
+
+void writedown():
+    for(auto &i: children)
+        i.writedown()
+    target_file << name << ...;
+
+
+байт	описание
+
+1	обозначение структа
+-	load аргументы
+8	число детей
+8	индекс детей (индекс детей должен быть меньше)
+
+0х00 node
+аргументы:
+
+-	name (asciiz)
+1	active (bool)
+1	visible (bool)
+
+0х01 spatial
+аргументы:
+
+8	pos (float[2])
+4	angle (float)
+8	scale (float[2])
+3	debug_color (int8[3])
+
+0х02 sprite
+
+пример файла:
+
+1	spatial_0\0 1 1 256.f -128.f 0.f 1.f 1.f 0 0 255	0
+1	spatial_1\0 1 1 -256.f 128.f 0.f 1.f 1.f0 255 0 0	0
+1 	spatial_2\0 1 1 480.f 360.f 45.f 1.f 1.f 255 0 0 	2 0 1
+0 	root 1 1 	1 2
+

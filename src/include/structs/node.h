@@ -29,6 +29,9 @@ struct Node : std::enable_shared_from_this<Node>{
     void removeChild(shared_ptr<Node> node);
     void removeChild(size_t index);
 
+    //Struct ID for saving and loading node tree
+    virtual unsigned char getStructId();
+
     //Inherit functions
 
     virtual void onCreation();

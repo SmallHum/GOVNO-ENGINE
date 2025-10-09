@@ -53,7 +53,7 @@ namespace assets{
     }
 
     void loadPack(string pack_name){
-        cout << "Loading asset pack \"" << pack_name << "\"\n";
+        cout << "Loading asset pack \"" << pack_name << "\"...\n\n";
         std::filesystem::path sprites_path("assets/"+pack_name+"/sprites");
         std::filesystem::path music_path("assets/"+pack_name+"/music");
         std::filesystem::path sfx_path("assets/"+pack_name+"/sfx");
@@ -84,24 +84,25 @@ namespace assets{
 
     void printData(){
         for(auto &i : packs){
-            std::cout << "Pack name:" << i.first << '\n';
+            cout << "Pack name:" << i.first << '\n';
 
-            std::cout << "\tSprites:\n";
+            cout << "  Sprites:\n";
             for(auto &j : i.second.sprites)
-                std::cout << "\t\t" << j.first << '\n';
+                cout << "    " << j.first << '\n';
 
-            std::cout << "\tMusic:\n";
+            cout << "  Music:\n";
             for(auto &j : i.second.music)
-                std::cout << "\t\t" << j.first << '\n';
+                cout << "    " << j.first << '\n';
 
-            std::cout << "\tSfx:\n";
+            cout << "  Sfx:\n";
             for(auto &j : i.second.sfx)
-                std::cout << "\t\t" << j.first << '\n';
+                cout << "    " << j.first << '\n';
 
-            std::cout << "\tFonts:\n";
+            cout << "  Fonts:\n";
             for(auto &j : i.second.fonts)
-                std::cout << "\t\t" << j.first << '\n';
+                cout << "    " << j.first << '\n';
         }
+        cout << '\n';
     }
 
     weak_ptr<sf::Sprite> getSp(const string name){

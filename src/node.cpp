@@ -5,6 +5,10 @@ Node::Node(string name): name(name){
     icon = (unsigned char)249;
 }
 
+unsigned char Node::getStructId(){
+    return 0;
+}
+
 void Node::addChild(shared_ptr<Node> node){
     if(!node)return;
     if(auto p = node->parent.lock()){
@@ -64,6 +68,7 @@ void Node::printTree(int spaces){
     for(auto& i : children) i->printTree(spaces+1);
 }
 void Node::printInfo(std::ostream& s){
+    s << (int)getStructId() << '\n';
     s << "Node:\n" <<
     " name: " << name << '\n' <<
     " active: " << prettyBool(active) << '\n' <<
