@@ -1,8 +1,8 @@
 #pragma once
 
 //sfml includes
-#include <SFML\Graphics.hpp>
-#include <SFML\Audio.hpp>
+#include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
 
 //including other stuff in panic
 #include <iostream>
@@ -12,9 +12,12 @@
 #include <vector>
 #include <queue>
 #include <map>
+#include <set>
 #include <memory>
 #include <functional>
 #include <thread>
+#include <fstream>
+#include <filesystem>
 
 #define v2f sf::Vector2f
 #define v3f sf::Vector3f
@@ -31,6 +34,7 @@ using std::cin, std::cout,
     std::string,
     std::vector,
     std::map,
+    std::set,
     std::weak_ptr,
     std::shared_ptr,
     std::make_shared,
@@ -39,10 +43,11 @@ using std::cin, std::cout,
     std::priority_queue;
 
 //my includes
+#include <assets.h>
 #include <spatial.h>
 #include <controls.h>
 #include <console.h>
-#include <graphics.h>
+#include <viewport.h>
 
 const static int debug_info_z = 9999;
 

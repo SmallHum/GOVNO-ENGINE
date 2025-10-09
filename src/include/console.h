@@ -48,7 +48,8 @@ namespace console{
 
     void inputHandle();
 
-    void init(shared_ptr<Node> root_node);
+    void init();
+    void setRoot(shared_ptr<Node> root_node);
 
     shared_ptr<Node> fromPath();
 
