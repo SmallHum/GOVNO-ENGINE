@@ -16,7 +16,7 @@ struct Spatial : Node{
         v2f pos, float angle = 0.f, v2f scale = {1.f,1.f}, sf::Color debug_color = sf::Color::White
     );
 
-    virtual unsigned char getStructId() override;
+    virtual StructId getStructId() override;
 
     void updateLocalTransform();
 

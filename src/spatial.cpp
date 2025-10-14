@@ -15,8 +15,8 @@ Spatial::Spatial(string name, v2f pos, float angle, v2f scale, sf::Color debug_c
                 Node::icon = (unsigned char)192;
 }
 
-unsigned char Spatial::getStructId(){
-    return 1;
+StructId Spatial::getStructId(){
+    return StructId::Spatial;
 }
 
 void Spatial::updateLocalTransform(){

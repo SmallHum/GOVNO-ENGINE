@@ -42,6 +42,8 @@ using std::cin, std::cout,
     std::thread,
     std::priority_queue;
 
+#include <core/enums.h>
+
 //my includes
 #include <structs/spatial.h>
 

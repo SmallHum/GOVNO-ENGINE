@@ -5,8 +5,8 @@ Node::Node(string name): name(name){
     icon = (unsigned char)249;
 }
 
-unsigned char Node::getStructId(){
-    return 0;
+StructId Node::getStructId(){
+    return StructId::Node;
 }
 
 void Node::addChild(shared_ptr<Node> node){
@@ -42,12 +42,12 @@ shared_ptr<Node> Node::find(string path){
         return shared_from_this();
 
     size_t index = path.find_first_of('/');
-
     string searched_name = path.substr(0,index),
+
     next_path = path.substr(index + 1, path.size() - index);
 
     if(searched_name == ".."){
-        return parent.lock();
+        return parent.lock()->find(next_path);
     }
 
     for(auto &i : children){
