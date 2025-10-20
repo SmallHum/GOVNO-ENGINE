@@ -19,6 +19,7 @@
 #include <fstream>
 #include <filesystem>
 #include <imgui/imgui.h>
+#include <imgui/imgui-SFML.h>
 
 #define v2f sf::Vector2f
 #define v3f sf::Vector3f

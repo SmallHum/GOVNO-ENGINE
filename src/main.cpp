@@ -21,13 +21,14 @@ int main(){
     console::setRoot(root);
 
     sf::Clock dt_clock;
+    sf::Time dt_time;
     float dt = 1.f/60.f;
 
     //main loop
     while(viewport::wind.isOpen()){
-        dt_clock.start();
         //update events
         while(const std::optional ev = viewport::wind.pollEvent()){
+            ImGui::SFML::ProcessEvent(viewport::wind,*ev);
             if(ev->is<sf::Event::Closed>()){
                 exit();
             }
@@ -47,9 +48,16 @@ int main(){
         root->draw();
         root->drawDebug();
 
+        ImGui::SFML::Update(viewport::wind, dt_time);
+
+        ImGui::Begin("Window", nullptr, ImGuiWindowFlags_NoMove);
+        ImGui::Button("Button",ImVec2(96,48));
+        ImGui::End();
+
         viewport::display(dt);
 
-        dt = dt_clock.reset().asSeconds();
+        dt_time = dt_clock.restart();
+        dt = dt_time.asSeconds();
     }
     exit();
 }

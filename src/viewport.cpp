@@ -29,6 +29,8 @@ namespace viewport{
     void init(v2u res, string name){
         // cout << "trying to make a window\n";
         wind = sf::RenderWindow(sf::VideoMode(res),name);
+        ImGui::SFML::Init(wind);
+        
         // cout << "yay window created\n";
         wind.setFramerateLimit(60);
         // cout << "framerate changed uhh\n";
@@ -74,6 +76,7 @@ namespace viewport{
             instaDraw(&fps_text);
         }
 
+        ImGui::SFML::Render(wind);
         wind.display();
         wind.clear(bg_color);
     }
