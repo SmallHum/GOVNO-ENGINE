@@ -1,43 +1,44 @@
 #include <core/assets.h>
 
-void Pack::setImageAsset(const std::filesystem::__cxx11::directory_entry& file){
-    std::string path = file.path().string(), name = file.path().filename().string();
-    std::string clear_name = name.substr(0,name.find('.'));
+// Loads independent asset map, from file
+template <typename T>
+void Pack::loadAsset(
+        map<string, shared_ptr<T>> &assets_list, 
+        std::filesystem::path path
+){
+    if(std::filesystem::exists(path) && std::filesystem::is_directory(path)) {
 
-    if(!std::filesystem::is_regular_file(file.status())){
-        cout << "ERROR: Couldn't read file \"" << path << "\"\n"; return;
-    }
-    textures[clear_name] = make_shared<sf::Texture>(sf::Texture(path));
-    sprites[clear_name] = make_shared<sf::Sprite>(sf::Sprite(*textures[clear_name]));
-}
-void Pack::setMusicAsset(const std::filesystem::__cxx11::directory_entry& file){
-    std::string path = file.path().string(), name = file.path().filename().string();
-    std::string clear_name = name.substr(0,name.find('.'));
+            for(const auto& file : std::filesystem::directory_iterator(path)){
 
-    if(!std::filesystem::is_regular_file(file.status())){
-        cout << "ERROR: Couldn't read file \"" << path << "\"\n"; return;
-    }
-    music[clear_name] = make_shared<sf::Music>(sf::Music(path));
-}
-void Pack::setSfxAsset(const std::filesystem::__cxx11::directory_entry& file){
-    std::string path = file.path().string(), name = file.path().filename().string();
-    std::string clear_name = name.substr(0,name.find('.'));
+                // Getting a clear name and path string
+                std::string path = file.path().string(),
+                name = file.path().filename().string();
+                std::string clear_name = name.substr(0,name.find('.'));
 
-    if(!std::filesystem::is_regular_file(file.status())){
-        cout << "ERROR: Couldn't read file \"" << path << "\"\n"; return;
+                // Checking if file is even readable.
+                // Skipping if not. It will crash anyways.
+                if(!std::filesystem::is_regular_file(file.status())){
+                    cout << "ERROR: Couldn't read file \"" << path << "\"\n"; continue;
+                }
+                assets_list[clear_name] = make_shared<T>(T(path));
+            }
     }
-    sound_buffers[clear_name] = make_shared<sf::SoundBuffer>(sf::SoundBuffer(path));
-    sfx[clear_name] = make_shared<sf::Sound>(sf::Sound(*sound_buffers[clear_name]));
+    else{
+        cout << "ERROR: Couldn't find folder \"" << path.string << "\"\n";
+    }
 }
-void Pack::setFontAsset(const std::filesystem::__cxx11::directory_entry& file){
-    std::string path = file.path().string(), name = file.path().filename().string();
-    std::string clear_name = name.substr(0,name.find('.'));
 
-    if(!std::filesystem::is_regular_file(file.status())){
-        cout << "ERROR: Couldn't read file \"" << path << "\"\n"; return;
+// Loads a dependent asset map, from another asset map
+template <typename T, typename Dependency>
+void Pack::loadAsset(
+        map<string, shared_ptr<T>> &assets_list, 
+        map<string,shared_ptr<Dependency>> &d_map
+){
+    for(auto &i : d_map){
+        assets_list[i.first] = make_shared<T>(T(*i.second));
     }
-    fonts[clear_name] = make_shared<sf::Font>(sf::Font(path));
 }
+
 weak_ptr<sf::Sprite> Pack::getSpr(const std::string key){
     return sprites[key];
 }
@@ -61,21 +62,15 @@ namespace assets{
 
         packs.insert({pack_name,Pack()});
 
-        if(std::filesystem::exists(sprites_path) && std::filesystem::is_directory(sprites_path)) {
-            for(const auto& file : std::filesystem::directory_iterator(sprites_path))
-                packs[pack_name].setImageAsset(file);
+        auto &pack = packs[pack_name];
 
-            for(const auto& file : std::filesystem::directory_iterator(music_path))
-                packs[pack_name].setMusicAsset(file);
+        pack.loadAsset<sf::Texture>(pack.textures,sprites_path);
+        pack.loadAsset<sf::Sprite,sf::Texture>(pack.sprites,pack.textures);
 
-            for(const auto& file : std::filesystem::directory_iterator(sfx_path))
-                packs[pack_name].setSfxAsset(file);
+        pack.loadAsset<sf::Music>(pack.music, music_path);
 
-            for(const auto& file : std::filesystem::directory_iterator(font_path))
-                packs[pack_name].setFontAsset(file);
-        }else{
-            cout << "ERROR: Couldn't find sprite pack \"" << pack_name << "\"\n";
-        }
+        pack.loadAsset<sf::SoundBuffer>(pack.sound_buffers, sfx_path);
+        pack.loadAsset<sf::Sound,sf::SoundBuffer>(pack.sfx, pack.sound_buffers);
         printData();
     }
     void unloadPack(string pack_name){

@@ -10,10 +10,13 @@ struct Pack{
     map<string,shared_ptr<sf::Sound>> sfx;
     map<string,shared_ptr<sf::Font>> fonts;
 
-    void setImageAsset(const std::filesystem::__cxx11::directory_entry& file);
-    void setMusicAsset(const std::filesystem::__cxx11::directory_entry& file);
-    void setSfxAsset(const std::filesystem::__cxx11::directory_entry& file);
-    void setFontAsset(const std::filesystem::__cxx11::directory_entry& file);
+    // Loads independent asset map, from file
+    template <typename T>
+    void Pack::loadAsset(map<string, shared_ptr<T>> &assets_list, std::filesystem::path path);
+
+    // Loads a dependent asset map, from another asset map
+    template <typename T, typename Dependency>
+    void Pack::loadAsset(map<string, shared_ptr<T>> &assets_list, map<string,shared_ptr<Dependency>> &d_map);
 
     weak_ptr<sf::Sprite> getSpr(const string name);
     weak_ptr<sf::Texture> getTex(const string name);
