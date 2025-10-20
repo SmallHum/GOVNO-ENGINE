@@ -5,14 +5,21 @@ namespace viewport{
     extern sf::Text spatial_name;
 };
 
-Spatial::Spatial(string name, v2f pos, float angle, v2f scale, sf::Color debug_color): 
-            Node(name), 
-            pos(pos), 
-            angle(angle), 
-            scale(scale),
-            debug_color(debug_color){
-                updateTransform();
-                Node::icon = (unsigned char)192;
+Spatial::Spatial(
+    string name, 
+    v2f pos, 
+    float angle, 
+    v2f scale, 
+    sf::Color debug_color
+): 
+    Node(name), 
+    pos(pos), 
+    angle(angle), 
+    scale(scale),
+    debug_color(debug_color)
+{
+        updateTransform();
+        Node::icon = (unsigned char)192;
 }
 
 StructId Spatial::getStructId(){

@@ -1,0 +1,2 @@
+C:\MinGW\mingw64\bin\g++.exe -c src\include\imgui\imgui.cpp src\include\imgui\imgui_draw.cpp src\include\imgui\imgui_impl_opengl3.cpp src\include\imgui\imgui_tables.cpp src\include\imgui\imgui_widgets.cpp -Isrc\include -O2
+pause

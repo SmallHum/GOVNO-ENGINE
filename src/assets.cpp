@@ -11,20 +11,20 @@ void Pack::loadAsset(
             for(const auto& file : std::filesystem::directory_iterator(path)){
 
                 // Getting a clear name and path string
-                std::string path = file.path().string(),
+                std::string str_path = file.path().string(),
                 name = file.path().filename().string();
                 std::string clear_name = name.substr(0,name.find('.'));
 
                 // Checking if file is even readable.
                 // Skipping if not. It will crash anyways.
                 if(!std::filesystem::is_regular_file(file.status())){
-                    cout << "ERROR: Couldn't read file \"" << path << "\"\n"; continue;
+                    cout << "ERROR: Couldn't read file \"" << str_path << "\"\n"; continue;
                 }
-                assets_list[clear_name] = make_shared<T>(T(path));
+                assets_list[clear_name] = make_shared<T>(T(str_path));
             }
     }
     else{
-        cout << "ERROR: Couldn't find folder \"" << path.string << "\"\n";
+        cout << "ERROR: Couldn't find folder \"" << path.string() << "\"\n";
     }
 }
 
@@ -71,6 +71,8 @@ namespace assets{
 
         pack.loadAsset<sf::SoundBuffer>(pack.sound_buffers, sfx_path);
         pack.loadAsset<sf::Sound,sf::SoundBuffer>(pack.sfx, pack.sound_buffers);
+
+        pack.loadAsset<sf::Font>(pack.fonts,font_path);
         printData();
     }
     void unloadPack(string pack_name){

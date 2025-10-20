@@ -27,15 +27,24 @@ namespace viewport{
     priority_queue<DrawInfo> draw_queue;
 
     void init(v2u res, string name){
+        // cout << "trying to make a window\n";
         wind = sf::RenderWindow(sf::VideoMode(res),name);
+        // cout << "yay window created\n";
         wind.setFramerateLimit(60);
+        // cout << "framerate changed uhh\n";
 
         default_font = *getFont("main:courier").lock();
+        // cout << "font moving\n";
         default_font.setSmooth(0);
+        // cout << "font unsmoothed\n";
         fps_text.move(v2f(16.f,16.f));
+        // cout << "fps text moved\n";
         fps_text.setCharacterSize(16);
+        // cout << "fps text resized\n";
         spatial_name.setCharacterSize(16);
+        // cout << "spatial name text resized\n";
         node_info.setCharacterSize(16);
+        // cout << "node info resized\n";
 
         axis_x[1].position = v2f(16,0);
         axis_x[2].position = v2f(13,2);
@@ -51,6 +60,7 @@ namespace viewport{
             axis_x[i].color = sf::Color::Red;
             axis_y[i].color = sf::Color::Green;
         }
+        // cout << "vertex array built\n";
     }
 
     void display(float dt){

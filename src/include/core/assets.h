@@ -12,11 +12,11 @@ struct Pack{
 
     // Loads independent asset map, from file
     template <typename T>
-    void Pack::loadAsset(map<string, shared_ptr<T>> &assets_list, std::filesystem::path path);
+    void loadAsset(map<string, shared_ptr<T>> &assets_list, std::filesystem::path path);
 
     // Loads a dependent asset map, from another asset map
     template <typename T, typename Dependency>
-    void Pack::loadAsset(map<string, shared_ptr<T>> &assets_list, map<string,shared_ptr<Dependency>> &d_map);
+    void loadAsset(map<string, shared_ptr<T>> &assets_list, map<string,shared_ptr<Dependency>> &d_map);
 
     weak_ptr<sf::Sprite> getSpr(const string name);
     weak_ptr<sf::Texture> getTex(const string name);
