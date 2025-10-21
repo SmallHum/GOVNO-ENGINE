@@ -33,6 +33,7 @@
 #define mat3 sf::Transform
 
 using std::cin, std::cout,
+    std::fstream,
     std::string,
     std::vector,
     std::map,
@@ -51,7 +52,6 @@ using std::cin, std::cout,
 
 #include <core/assets.h>
 #include <core/controls.h>
-#include <core/console.h>
 #include <core/viewport.h>
 
 const static int debug_info_z = 9999;

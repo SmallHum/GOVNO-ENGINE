@@ -5,6 +5,8 @@ namespace viewport{
     extern sf::Text spatial_name;
 };
 
+Spatial::Spatial(){}
+
 Spatial::Spatial(
     string name, 
     v2f pos, 
@@ -19,7 +21,6 @@ Spatial::Spatial(
     debug_color(debug_color)
 {
         updateTransform();
-        Node::icon = (unsigned char)192;
 }
 
 StructId Spatial::getStructId(){

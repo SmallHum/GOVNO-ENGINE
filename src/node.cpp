@@ -1,8 +1,9 @@
-#include <structs/spatial.h>
+#include <fstream_opers.h>
+
+Node::Node(){}
 
 Node::Node(string name): name(name){
     std::cout << "Node " << name << " constructed." << '\n';
-    icon = (unsigned char)249;
 }
 
 StructId Node::getStructId(){
@@ -63,7 +64,6 @@ shared_ptr<Node> Node::find(string path){
 
 void Node::printTree(int spaces){
     for(int i = 0; i < spaces; i++) std::cout << "  ";
-    std::cout << icon << ' ' << name << '\n';
 
     for(auto& i : children) i->printTree(spaces+1);
 }
@@ -100,6 +100,44 @@ void Node::draw(){
 void Node::drawDebug(){
     for(auto& i : children)
         i->drawDebug();
+}
+
+void Node::writeToFile(string file){
+    fstream stream(file, std::ios::out | std::ios::binary);
+
+    if(!stream.is_open()){
+        cout << "ERROR: couldn't write to file " << file << "\n";
+        return;
+    }
+
+    writeToStream(stream);
+
+    stream.close();
+}
+
+void Node::writer(fstream &stream){
+    stream
+    << name
+    << active
+    << visible;
+}
+
+void Node::reader(fstream& stream){
+    name = fstreamRead(stream);
+    active = fstreamRead<bool>(stream);
+    visible = fstreamRead<bool>(stream);
+}
+
+void Node::writeToStream(fstream &stream){
+
+    stream << (unsigned int)getStructId();
+
+    writer(stream);
+
+    stream << children.size();
+
+    for(auto &i : children)
+        i->writeToStream(stream);
 }
 
 Node::~Node(){

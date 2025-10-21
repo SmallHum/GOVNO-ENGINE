@@ -2,12 +2,9 @@
 
 void exit(){
     viewport::exit();
-    console::destroy();
 }
 
 void init(){
-    console::init();
-    cout << "Console init done.\n";
     assets::init();
     cout << "Assets init done.\n";
     viewport::init({960,720});
@@ -18,11 +15,15 @@ int main(){
     init();
 
     shared_ptr<Node> root = make_shared<Node>("root");
-    console::setRoot(root);
 
     sf::Clock dt_clock;
     sf::Time dt_time;
     float dt = 1.f/60.f;
+    
+    bool imgui_init_complete = ImGui::SFML::Init(viewport::wind);
+    if(!imgui_init_complete){
+        cout << "Note: couldn't init ImGUI in SFML window for some reason.\n";
+    }
 
     //main loop
     while(viewport::wind.isOpen()){
@@ -35,22 +36,18 @@ int main(){
         }
         updateControls();
 
-        if(keyPressed(ACT_CNSL))
-            console::flip();
-
         //physics
 
         //render
-
-        viewport::bg_color = (console::is_open) ? sf::Color(43,67,175) : sf::Color(0,0,0);
 
         root->process();
         root->draw();
         root->drawDebug();
 
+        //TEMPORARY IM TRYING TO LEARN ABOUT THIS THING
         ImGui::SFML::Update(viewport::wind, dt_time);
 
-        ImGui::Begin("Window", nullptr, ImGuiWindowFlags_NoMove);
+        ImGui::Begin("Window", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
         ImGui::Button("Button",ImVec2(96,48));
         ImGui::End();
 

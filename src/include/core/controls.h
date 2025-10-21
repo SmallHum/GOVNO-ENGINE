@@ -17,21 +17,22 @@ namespace controls{
 
     extern key acts[];
 
-    //array of key states
-    //7 keys, each has 3 elements
-    //index 0 - previous held state
-    //index 1 - current held state
-    //index 2 - current toggled state
+    // Array of key states
+    // 7 keys, each has 3 elements
+    // Index 0 - previous held state
+    // Index 1 - current held state
+    // Index 2 - current toggled state
     extern bool states[8][3];
 
-    //function for updating controls states
+    // Function for updating controls states
     void updCtrls();
 
     bool kHeld(key a);
     bool kToggled(key a);
     bool kPressed(key a);
 
-    //gets direction vector from keys held
+    // Gets direction vector from keys held
+    // Set to UP DOWN LEFT RIGHT by default
     v2i getDHeld(key up = A_UP, key down = A_DOWN, key left = A_LEFT, key right = A_RIGHT);
     v2i getDPressed(key up = A_UP, key down = A_DOWN, key left = A_LEFT, key right = A_RIGHT);
 };
