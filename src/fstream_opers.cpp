@@ -1,5 +1,19 @@
 #include <fstream_opers.h>
 
+namespace factory{
+    unordered_map<StructId, function<shared_ptr<Node>()>> creators;
+
+    void init(){
+        factory::reg<Node>(StructId::Node);
+        factory::reg<Spatial>(StructId::Spatial);
+    }
+
+    shared_ptr<Node> create(const StructId& id){
+        auto it = creators.find(id);
+        return it != creators.end() ? it->second() : nullptr;
+    }
+};
+
 string fstreamRead(fstream& f){
     string result;
     size_t size;
@@ -40,20 +54,7 @@ shared_ptr<Node> constructFromFile(string file){
 shared_ptr<Node> constructFromStream(fstream &stream){
 
     StructId id = fstreamRead<StructId>(stream);
-
-    shared_ptr<Node> result;
-
-    switch(id){
-        case StructId::Node:
-            result = make_shared<Node>(Node());
-            break;
-        case StructId::Spatial:
-            result = make_shared<Node>(Spatial());
-            break;
-
-        // Don't forget to add more here
-        // Tbh i don't know how to write this particular thing better
-    }
+    shared_ptr<Node> result = factory::create(id);
 
     result->reader(stream);
 

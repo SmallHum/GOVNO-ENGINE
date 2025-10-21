@@ -37,6 +37,7 @@ using std::cin, std::cout,
     std::string,
     std::vector,
     std::map,
+    std::unordered_map,
     std::set,
     std::weak_ptr,
     std::shared_ptr,
@@ -44,15 +45,6 @@ using std::cin, std::cout,
     std::function,
     std::thread,
     std::priority_queue;
-
-#include <core/enums.h>
-
-//my includes
-#include <structs/spatial.h>
-
-#include <core/assets.h>
-#include <core/controls.h>
-#include <core/viewport.h>
 
 const static int debug_info_z = 9999;
 

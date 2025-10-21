@@ -1,6 +1,6 @@
 #pragma once
 
-#include <config.h>
+#include <core/enums.h>
 
 struct Node : std::enable_shared_from_this<Node>{
     vector<shared_ptr<Node>> children;

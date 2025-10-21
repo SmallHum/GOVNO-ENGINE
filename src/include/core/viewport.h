@@ -1,6 +1,6 @@
 #pragma once
 
-#include <config.h>
+#include <core/assets.h>
 
 namespace viewport{
     struct DrawInfo{

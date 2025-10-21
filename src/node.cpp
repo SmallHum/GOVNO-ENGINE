@@ -63,8 +63,8 @@ shared_ptr<Node> Node::find(string path){
 }
 
 void Node::printTree(int spaces){
-    for(int i = 0; i < spaces; i++) std::cout << "  ";
-
+    for(int i = 0; i < spaces; i++) cout << "  ";
+    cout << name << '\n';
     for(auto& i : children) i->printTree(spaces+1);
 }
 void Node::printInfo(std::ostream& s){
@@ -116,10 +116,9 @@ void Node::writeToFile(string file){
 }
 
 void Node::writer(fstream &stream){
-    stream
-    << name
-    << active
-    << visible;
+    fstreamWrite(stream,name);
+    fstreamWrite<bool>(stream,active);
+    fstreamWrite<bool>(stream,visible);
 }
 
 void Node::reader(fstream& stream){
@@ -130,11 +129,13 @@ void Node::reader(fstream& stream){
 
 void Node::writeToStream(fstream &stream){
 
-    stream << (unsigned int)getStructId();
+    unsigned int id = (unsigned int)getStructId();
+    fstreamWrite<unsigned int>(stream, id);
 
     writer(stream);
 
-    stream << children.size();
+    size_t size = children.size();
+    fstreamWrite<size_t>(stream,size);
 
     for(auto &i : children)
         i->writeToStream(stream);

@@ -1,4 +1,6 @@
 #include <structs/spatial.h>
+#include <core/viewport.h>
+#include <fstream_opers.h>
 
 namespace viewport{
     extern sf::CircleShape spatial_origin;
@@ -64,6 +66,21 @@ void Spatial::drawDebug(){
 void Spatial::process(){
     updateTransform();
     Node::process();
+}
+
+void Spatial::reader(fstream &stream){
+    Node::reader(stream);
+
+    pos = fstreamReadV2f(stream);
+    angle = fstreamRead<float>(stream);
+    scale = fstreamReadV2f(stream);
+}
+void Spatial::writer(fstream &stream){
+    Node::writer(stream);
+
+    fstreamWriteV2f(stream, pos);
+    fstreamWrite<float>(stream, angle);
+    fstreamWriteV2f(stream, scale);
 }
 
 void Spatial::printInfo(std::ostream& s){

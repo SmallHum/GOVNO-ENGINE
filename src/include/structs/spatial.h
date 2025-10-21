@@ -33,5 +33,8 @@ struct Spatial : Node{
 
     virtual void process() override;
 
+    virtual void reader(fstream &stream) override;
+    virtual void writer(fstream &stream) override;
+    
     virtual void printInfo(std::ostream& s) override;
 };
