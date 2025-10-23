@@ -7,7 +7,14 @@ namespace viewport{
     extern sf::Text spatial_name;
 };
 
-Spatial::Spatial(){}
+Spatial::Spatial(): Node(){
+    name = "Spatial";
+    pos = {0.f, 0.f};
+    angle = 0.f;
+    scale = {1.f,1.f};
+    debug_color = sf::Color(rand()%256,rand()%256,rand()%256);
+    updateTransform();
+}
 
 Spatial::Spatial(
     string name, 
@@ -53,13 +60,12 @@ v2f Spatial::getGlobalPos(){
 
 void Spatial::drawDebug(){
     Node::drawDebug();
-    viewport::spatial_name.setFillColor(debug_color);
-    viewport::spatial_name.setString(name);
-    if(viewport::show_spatial_name)
-        viewport::instaDraw(&viewport::spatial_name, mat3().translate(getGlobalPos()));
-    if(viewport::show_spatial_origin){
-        viewport::instaDraw(&viewport::axis_x, global_transform);
-        viewport::instaDraw(&viewport::axis_y, global_transform);
+    if(debug::show_spatial_name){
+        viewport::drawOver(debug::spatial_name(name, debug_color), 1, 0, mat3().translate(getGlobalPos()));
+    }
+    if(debug::show_spatial_origin){
+        viewport::drawOver(&debug::axis_x, 0, 0, global_transform);
+        viewport::drawOver(&debug::axis_y, 0, 0, global_transform);
     }
 }
 

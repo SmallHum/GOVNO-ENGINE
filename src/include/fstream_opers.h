@@ -13,6 +13,11 @@ namespace factory{
     }
 
     shared_ptr<Node> create(const StructId& id);
+
+    const string names[] = {
+        "Node",
+        "Spatial"
+    };
 };
 
 template <typename T>

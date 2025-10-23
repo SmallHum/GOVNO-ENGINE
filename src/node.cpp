@@ -1,6 +1,8 @@
 #include <fstream_opers.h>
 
-Node::Node(){}
+Node::Node(){
+    name = "Node";
+}
 
 Node::Node(string name): name(name){
     std::cout << "Node " << name << " constructed." << '\n';

@@ -1,5 +1,7 @@
 #include <core/controls.h>
 #include <core/viewport.h>
+#include <core/assets.h>
+
 #include <structs/spatial.h>
 #include <fstream_opers.h>
 
@@ -8,11 +10,13 @@ void init(){
     cout << "Assets init done.\n";
     viewport::init({960,720});
     cout << "Viewport init done.\n";
+    debug::init();
+    cout << "Debug init done.\n";
     factory::init();
     cout << "Node loader init done.\n";
 
-    viewport::showSpatialOrigin();
-    viewport::showSpatialName();
+    debug::showSpatialOrigin();
+    debug::showSpatialName();
 }
 
 void exit(){
@@ -42,17 +46,11 @@ int main(){
     sf::Clock dt_clock;
     sf::Time dt_time;
     float dt = 1.f/60.f;
-    
-    bool imgui_init_complete = ImGui::SFML::Init(viewport::wind);
-    if(!imgui_init_complete){
-        cout << "Note: couldn't init ImGUI in SFML window for some reason.\n";
-    }
 
     //main loop
     while(viewport::wind.isOpen()){
         //update events
         while(const std::optional ev = viewport::wind.pollEvent()){
-            ImGui::SFML::ProcessEvent(viewport::wind,*ev);
             if(ev->is<sf::Event::Closed>()){
                 exit();
             }
@@ -66,13 +64,6 @@ int main(){
         root->process();
         root->draw();
         root->drawDebug();
-
-        //TEMPORARY IM TRYING TO LEARN ABOUT THIS THING
-        ImGui::SFML::Update(viewport::wind, dt_time);
-
-        ImGui::Begin("Window", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
-        ImGui::Button("Button",ImVec2(96,48));
-        ImGui::End();
 
         viewport::display(dt);
 
