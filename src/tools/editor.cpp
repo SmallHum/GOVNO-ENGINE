@@ -303,6 +303,9 @@ namespace editor{
     void open(){
         if(!node_root)return;
 
+        active_selection.reset();
+        multiple_selection.clear();
+
         node_root = constructFromFile("saved.ntr");
         tree_root->fill(node_root);
     }
@@ -473,11 +476,14 @@ namespace editor{
                     t->del();
                 }
             to_remove.clear();
-            if(!multiple_selection.empty())
+            if(!multiple_selection.empty()){
                 if(auto m = multiple_selection.front().lock())
                     m->multipleUnselectAll(multiple_selection);
+            }
             if(auto a = active_selection.lock())
                 a->activeUnselect(active_selection);
+            multiple_selection.clear();
+            active_selection.reset();
         }
 
         if(auto s = active_selection.lock()){
@@ -501,6 +507,8 @@ void init(){
     factory::init();
     cout << "Node loader init done.\n";
     editor::init();
+
+    srand(time(nullptr));
 
     debug::showAll();
 
