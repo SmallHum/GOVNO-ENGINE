@@ -43,13 +43,15 @@ namespace node_gen{
     }
 };
 
-namespace tree_viewer{
+namespace editor{
 
     int id_fix;
 
     float tree_view_width = 240,
         actions_width = 160,
-        bar_height_button_size = 26;
+        bar_height_button_size = 26,
+        edit_width = 240,
+        edit_pos_x;
 
     string str_input(const char *label){
         string result;
@@ -64,6 +66,9 @@ namespace tree_viewer{
         size_t parent_index = -1;
 
         bool collapsed = 1;
+        bool is_active_selection = 0;
+        bool is_multiple_selection = 0;
+        size_t mult_sel_index = -1;
 
         vector<shared_ptr<TreeNode>> children;
 
@@ -93,7 +98,78 @@ namespace tree_viewer{
                 p->show();
         }
 
-        void drawCol1(weak_ptr<TreeNode> &selected, float depth = 0){
+        void activeSelect(weak_ptr<TreeNode> &active_selection){
+            if(auto a = active_selection.lock())
+                a->is_active_selection = 0;
+            active_selection = shared_from_this();
+            is_active_selection = 1;
+        }
+
+        void activeUnselect(weak_ptr<TreeNode> &active_selection){
+            active_selection.reset();
+            is_active_selection = 0;
+        }
+
+        void multipleSelect(vector<weak_ptr<TreeNode>> &multiple_selection){
+            mult_sel_index = multiple_selection.size();
+            multiple_selection.push_back(shared_from_this());
+            is_multiple_selection = 1;
+        }
+
+        void multipleUnselect(vector<weak_ptr<TreeNode>> &multiple_selection){
+            multiple_selection.erase(
+                multiple_selection.begin() + mult_sel_index
+            );
+            for(size_t i = mult_sel_index; i < multiple_selection.size(); i++)
+                if(auto p = multiple_selection[i].lock())
+                    multiple_selection[i].lock()->mult_sel_index--;
+            is_multiple_selection = 0;
+            mult_sel_index = -1;
+        }
+
+        void multipleUnselectAll(vector<weak_ptr<TreeNode>> &multiple_selection){
+            for(auto &i : multiple_selection){
+                auto p = i.lock();
+                cout << "NAME: " << p->ref.lock()->name << '\n';
+                cout << "MULT SEL INDEX: " << p->mult_sel_index << '\n';
+                p->is_multiple_selection = 0;
+                p->mult_sel_index = -1;
+            }
+            multiple_selection.clear();
+        }
+
+        void selectionProcess(weak_ptr<TreeNode> &active_selection, vector<weak_ptr<TreeNode>> &multiple_selection){
+
+            if(ImGui::IsKeyDown(ImGuiKey_LeftShift)){
+                cout << "SHIFT SELECTION...\n";
+                if(is_multiple_selection && is_active_selection){
+                    cout << "MULTIPLE AND ACTIVE\n";
+                    multipleUnselect(multiple_selection);
+                    activeUnselect(active_selection);
+                }
+                else if (is_multiple_selection && !is_active_selection){
+                    cout << "MULTIPLE BUT NOT ACTIVE\n";
+                    activeSelect(active_selection);
+                }
+                else if (!is_multiple_selection && is_active_selection){
+                    cout << "ACTIVE BUT NOT MULTIPLE\n";
+                    multipleSelect(multiple_selection);
+                }
+                else{
+                    cout << "NIETHER ACTIVE NOR MULTIPLE\n";
+                    activeSelect(active_selection);
+                    multipleSelect(multiple_selection);
+                }
+            }
+            else {
+                cout << "NON SHIFT SELECTION WORKED\n";
+                multipleUnselectAll(multiple_selection);
+                multipleSelect(multiple_selection);
+                activeSelect(active_selection);
+            }
+        }
+
+        void drawCol1(weak_ptr<TreeNode> &active_selection, vector<weak_ptr<TreeNode>> &multiple_selection, float depth = 0){
             if(!ref.lock())
                 return;
 
@@ -105,9 +181,11 @@ namespace tree_viewer{
             
             ImGui::PushID(id_fix++);
 
-            bool this_selected = selected.lock().get() == this;
-            if(this_selected){
+            if(is_active_selection){
                 ImGui::PushStyleColor(ImGuiCol_ChildBg, {0.2f, 0.3f, 0.5f, 1.0f});
+            }
+            else if(is_multiple_selection){
+                ImGui::PushStyleColor(ImGuiCol_ChildBg, {0.2f/2.f, 0.3f/2.f, 0.5f/2.f, 1.0f});
             }
             else{
                 ImGui::PushStyleColor(ImGuiCol_ChildBg, {0.f, 0.f, 0.f, 1.f});
@@ -117,7 +195,7 @@ namespace tree_viewer{
             if(!children.empty()){
                 if(ImGui::Button(button_icon,{26,26})){
                     collapsed = !collapsed;
-                    selected = shared_from_this();
+                    selectionProcess(active_selection, multiple_selection);
                 }
             }
             else{
@@ -127,7 +205,7 @@ namespace tree_viewer{
 
             ImGui::Text(n->name.c_str());
             if(ImGui::IsItemClicked()){
-                selected = shared_from_this();
+                selectionProcess(active_selection, multiple_selection);
             }
 
             ImGui::EndChild();
@@ -137,10 +215,10 @@ namespace tree_viewer{
 
             if(!collapsed)
                 for(auto &i : children)
-                    i->drawCol1(selected, depth+1);
+                    i->drawCol1(active_selection, multiple_selection, depth+1);
         }
 
-        void drawCol2(weak_ptr<TreeNode> &to_remove){
+        void drawCol2(){
             if(!ref.lock())
                 return;
 
@@ -150,16 +228,11 @@ namespace tree_viewer{
             ImGui::PushID(id_fix++);
             ImGui::Checkbox("visible",&n->visible);
 
-            ImGui::SameLine();
-
-            if(ImGui::Button("X",{24,24})){
-                to_remove = shared_from_this();
-            }
             ImGui::PopID();
 
             if(!collapsed)
                 for(auto &i : children)
-                    i->drawCol2(to_remove);
+                    i->drawCol2();
         }
 
         void del(){
@@ -168,8 +241,13 @@ namespace tree_viewer{
                     p->removeChild(r);
             }
 
-            if(auto p = parent.lock())
-                p->children.erase(p->children.begin()+parent_index);
+            if(auto p = parent.lock()){
+                auto this_iter = p->children.begin()+parent_index;
+                for(auto i = this_iter+1; i != p->children.end(); i++){
+                    (*i)->parent_index--;
+                }
+                p->children.erase(this_iter);
+            }
         }
 
         void add(function<shared_ptr<Node>()> &creator){
@@ -185,11 +263,15 @@ namespace tree_viewer{
         }
     };
 
-    weak_ptr<TreeNode> to_remove;
-    weak_ptr<TreeNode> selected;
+    vector<weak_ptr<TreeNode>> to_remove;
+
+    weak_ptr<TreeNode> active_selection;
+    vector<weak_ptr<TreeNode>> multiple_selection;
 
     shared_ptr<TreeNode> tree_root;
     shared_ptr<Node> node_root;
+
+    bool selection_changed;
 
     float scroll_y = 0.f;
 
@@ -198,24 +280,24 @@ namespace tree_viewer{
         node_gen::genTree(node_root, 3);
         node_root->printTree();
 
-        tree_viewer::tree_root = make_shared<tree_viewer::TreeNode>();
-        tree_viewer::tree_root->fill(node_root);
+        editor::tree_root = make_shared<editor::TreeNode>();
+        editor::tree_root->fill(node_root);
     }
 
     function<void()> nothing = [](){};
 
     void selAction(function<void()> &action, function<void()> &counter_action = nothing){
-        if(auto s = selected.lock())action();
+        if(auto s = active_selection.lock())action();
         else counter_action();
     }
 
     void newNode(function<shared_ptr<Node>()> &creator){
-        if(auto s = selected.lock())selected.lock()->add(creator);
+        if(auto s = active_selection.lock())active_selection.lock()->add(creator);
         else tree_root->add(creator);
     }
 
     function<void()> deleteNode = [](){
-        to_remove = selected;
+        to_remove = multiple_selection;
     };
 
     void open(){
@@ -230,27 +312,53 @@ namespace tree_viewer{
         node_root->writeToFile("saved.ntr");
     }
 
-    void nodeEditMenu(weak_ptr<Node> node){
-        // name
-        // visible
-        // active
+    void spatialEditMenu(Spatial *node){
+        ImGui::SeparatorText("Spatial");
+        // pos
+        float pos[2] = {node->pos.x, node->pos.y}; 
+        if(ImGui::InputFloat2("Position", pos)){
+            cout << "    applying pos\n";
+            node->pos.x = pos[0];
+            node->pos.y = pos[1];
+        }
+        // angle
+        float angle = node->angle;
+        if(ImGui::InputFloat("Angle", &angle)){
+            cout << "    applying angle\n";
+            node->angle = angle;
+        }
+        // scale
+        float scale[2] = {node->scale.x, node->scale.y}; 
+        if(ImGui::InputFloat2("Scale", scale)){
+            cout << "    applying scale\n";
+            node->scale.x = scale[0];
+            node->scale.y = scale[1];
+        }
     }
 
-    void spatialEditMenu(weak_ptr<Node> node){
-        nodeEditMenu(node);
-        // pos
-        // angle
-        // scale
+    void nodeEditMenu(Node *node){
+        ImGui::SeparatorText("Node");
+
+        string name = node->name;
+        if(ImGui::InputText("Name", name.data(), name.capacity()+1)){
+            name.resize(strlen(name.c_str()));
+            node->name = name;
+        }
+
+        ImGui::Checkbox("Visible", &node->visible);
+
+        auto s = dynamic_cast<Spatial*>(node);
+        if(s)spatialEditMenu(s);
     }
 
     void process(float &dt){
-        // cout << "idfix = 0...\n";
         id_fix = 0;
 
-        // cout << "resetting...\n";
-        to_remove.reset();
-
-        // cout << "menu bar...\n";
+        // Menu bar.
+        // TODO: 
+        // - Copy, cut, paste.
+        // - Folder view on open and save.
+        // - Discartion alert on opening.
         if(ImGui::BeginMainMenuBar()){
 
             if(ImGui::BeginMenu("File")){
@@ -270,7 +378,7 @@ namespace tree_viewer{
             ImGui::EndMainMenuBar();
         }
 
-        // cout << "keyboard actions...\n";
+        // Keyboard actions.
         if(ImGui::IsKeyPressed(ImGuiKey_Delete))selAction(deleteNode);
 
         if(ImGui::IsKeyPressed(ImGuiKey_N) && 
@@ -300,7 +408,7 @@ namespace tree_viewer{
 
         float height = viewport::wind.getSize().y-bar_height_button_size;
 
-        // cout << "tree view window...\n";
+        // Tree view window.
         ImGui::SetNextWindowPos({0,bar_height_button_size});
         ImGui::SetNextWindowSize({tree_view_width,height});
         ImGui::SetNextWindowSizeConstraints(
@@ -316,41 +424,63 @@ namespace tree_viewer{
 
         ImGui::Columns(2);
         
-        cout << "draw col 1...\n";
-        tree_root->drawCol1(selected);
+        tree_root->drawCol1(active_selection, multiple_selection);
         ImGui::NextColumn();
         
-        cout << "draw col 2...\n";
-        tree_root->drawCol2(to_remove);
+        tree_root->drawCol2();
 
         ImGui::End();
 
+        // Node editing window.
+        // Kinda stolen from Godot.
+        edit_pos_x = viewport::wind.getSize().x - edit_width;
+        ImGui::SetNextWindowPos({edit_pos_x,bar_height_button_size});
+        ImGui::SetNextWindowSize({edit_width,height});
+        ImGui::SetNextWindowSizeConstraints(
+            {240,height},
+            {FLT_MAX,height}
+        );
+        ImGui::Begin("Edit", nullptr, 
+            ImGuiWindowFlags_NoMove 
+            | ImGuiWindowFlags_NoCollapse 
+            | ImGuiWindowFlags_NoScrollWithMouse);
+
+        if(auto sel = active_selection.lock())
+            if(auto s = sel->ref.lock())
+                nodeEditMenu(s.get());
+
+        ImGui::End();
+
+        // Make node popup.
+        // Need to upgrade it.
         if(ImGui::BeginPopup("Make Node")){
 
             for(auto& i : factory::creators){
                 if(ImGui::Button(factory::names[(size_t)i.first].c_str(),{64,26})){
                     newNode(i.second);
+                    ImGui::CloseCurrentPopup();
                 }
             }
 
             ImGui::EndPopup();
         }
 
-
-        // ImGui::SetNextWindowPos({tree_view_width,0});
-        // ImGui::SetNextWindowSize({actions_width,viewport::wind.getSize().y});
-        // ImGui::SetNextWindowSizeConstraints({actions_width,viewport::wind.getSize().y},{FLT_MAX,FLT_MAX});
-        // ImGui::Begin("Actions", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
-
-        // node_maker::drawActions();
-
-        // ImGui::End();
-
-        if(auto t = to_remove.lock()){
-            t->del();
+        // Deletion process.
+        // Due to crashes, deletion process is moved to the end of the function
+        if(!to_remove.empty()){
+            for(auto &i : to_remove)
+                if(auto t = i.lock()){
+                    t->del();
+                }
+            to_remove.clear();
+            if(!multiple_selection.empty())
+                if(auto m = multiple_selection.front().lock())
+                    m->multipleUnselectAll(multiple_selection);
+            if(auto a = active_selection.lock())
+                a->activeUnselect(active_selection);
         }
 
-        if(auto s = selected.lock()){
+        if(auto s = active_selection.lock()){
             auto p = dynamic_cast<Spatial*>(s->ref.lock().get());
             if(p){
                 p->pos += 150.f * dt * v2f(getDirHeld());
@@ -370,7 +500,7 @@ void init(){
     cout << "Debug init done.\n";
     factory::init();
     cout << "Node loader init done.\n";
-    tree_viewer::init();
+    editor::init();
 
     debug::showAll();
 
@@ -420,11 +550,11 @@ int main(){
         //render
 
         // cout << "node processing...\n";
-        tree_viewer::node_root->process();
+        editor::node_root->process();
         // cout << "node drawing...\n";
-        tree_viewer::node_root->draw();
+        editor::node_root->draw();
         // cout << "node debug drawing...\n";
-        tree_viewer::node_root->drawDebug();
+        editor::node_root->drawDebug();
         // cout << "displaying...\n";
         viewport::display(dt);
 
@@ -433,7 +563,7 @@ int main(){
         // cout << "pushing font\n";
         ImGui::PushFont(def);
         // cout << "pushed font\n";
-        tree_viewer::process(dt);
+        editor::process(dt);
         ImGui::PopFont();
         ImGui::SFML::Render(viewport::wind);
         viewport::wind.display();

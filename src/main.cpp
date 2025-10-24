@@ -15,8 +15,7 @@ void init(){
     factory::init();
     cout << "Node loader init done.\n";
 
-    debug::showSpatialOrigin();
-    debug::showSpatialName();
+    debug::showAll();
 }
 
 void exit(){
@@ -26,22 +25,9 @@ void exit(){
 int main(){
     init();
 
-    // Trying to write it;
-    shared_ptr<Node> root = make_shared<Node>("root");
-    shared_ptr<Node> child = make_shared<Node>("child");
-
-    root->addChild(child);
-    root->addChild(make_shared<Node>("idiot1"));
-    child->addChild(make_shared<Node>("idiot2"));
-
-    root->writeToFile("root.bin");
+    shared_ptr<Node> root = constructFromFile("saved.ntr");
 
     root->printTree();
-
-    // Trying to read it
-    shared_ptr<Node> root2 = constructFromFile("root.bin");
-
-    root2->printTree();
 
     sf::Clock dt_clock;
     sf::Time dt_time;
@@ -66,6 +52,7 @@ int main(){
         root->drawDebug();
 
         viewport::display(dt);
+        viewport::wind.display();
 
         dt_time = dt_clock.restart();
         dt = dt_time.asSeconds();

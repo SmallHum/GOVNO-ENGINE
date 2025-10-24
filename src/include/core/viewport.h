@@ -9,19 +9,8 @@ struct DrawInfo{
     int z;
     bool follow_cam;
 
-    DrawInfo(sf::Drawable *d, bool is_copy, mat3 transform, int z, bool follow_cam){
-        cout << "constructing drawinfo...\n";
-        this->d = d;
-        this->is_copy = is_copy;
-        this->transform = transform;
-        this->z = z;
-        this->follow_cam = follow_cam;
-        cout << "construction finished! " << this->d << '\n';
-    }
-
     void freeD(){
         if(!is_copy)return;
-        cout << "deleting drawinfo drawable...\n";
         delete d;
     }
 };
