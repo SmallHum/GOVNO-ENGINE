@@ -8,6 +8,7 @@
 #include <iostream>
 #include <windows.h>
 #include <cstdlib>
+#include <math.h>
 #include <string>
 #include <vector>
 #include <queue>
@@ -66,6 +67,42 @@ const static int debug_info_z = 9999;
 //         0.f, 0.f, 0.f
 //     );
 // }
+
+static sf::Color fromHue(unsigned int h){
+    unsigned int r, g, b;
+    switch(h/60){
+        case 0:
+            r = 255;
+            g = h*255/60;
+            b = 0;
+            break;
+        case 1:
+            r = 255 - ((h - 60)*255/60);
+            g = 255;
+            b = 0;
+            break;
+        case 2:
+            r = 0;
+            g = 255;
+            b = (h-120)*255/60;
+            break;
+        case 3:
+            r = 0;
+            g = 255 - ((h-180)*255/60);
+            b = 255;
+            break;
+        case 4:
+            r = (h-240)*255/60;
+            g = 0;
+            b = 255;
+            break;
+        case 5:
+            r = 255;
+            g = 0;
+            b = 255 - ((h-300)*255/60);
+    }
+    return sf::Color(r,g,b);
+}
 
 static inline string prettyBool(bool a){
     return a ? "True" : "False";

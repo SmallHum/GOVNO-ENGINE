@@ -12,7 +12,7 @@ Spatial::Spatial(): Node(){
     pos = {0.f, 0.f};
     angle = 0.f;
     scale = {1.f,1.f};
-    debug_color = sf::Color(rand()%256,rand()%256,rand()%256);
+    debug_color = fromHue(rand()%360);
     updateTransform();
 }
 

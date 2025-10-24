@@ -35,8 +35,8 @@ namespace debug{
         axis_y[4].position = v2f(0,16);
 
         for(int i = 0; i < 5; i++){
-            axis_x[i].color = sf::Color::Green;
-            axis_y[i].color = sf::Color::Red;
+            axis_x[i].color = sf::Color::Red;
+            axis_y[i].color = sf::Color::Green;
         }
     }
 
