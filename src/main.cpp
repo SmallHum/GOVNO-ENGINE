@@ -1,9 +1,7 @@
 #include <core/controls.h>
-#include <core/viewport.h>
 #include <core/assets.h>
 
-#include <structs/spatial.h>
-#include <fstream_opers.h>
+#include <struct_loader.h>
 
 void init(){
     assets::init();

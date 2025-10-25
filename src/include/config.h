@@ -68,8 +68,11 @@ const static int debug_info_z = 9999;
 //     );
 // }
 
-static sf::Color fromHue(unsigned int h){
+static sf::Color hsv(unsigned int h, unsigned int s = 100, unsigned int v = 100){
     unsigned int r, g, b;
+    h = h%360;
+    s = s%101;
+    v = v%101;
     switch(h/60){
         case 0:
             r = 255;
@@ -101,7 +104,11 @@ static sf::Color fromHue(unsigned int h){
             g = 0;
             b = 255 - ((h-300)*255/60);
     }
-    return sf::Color(r,g,b);
+    r += (100-s)*(255-r)/100;
+    g += (100-s)*(255-g)/100;
+    b += (100-s)*(255-b)/100;
+
+    return sf::Color(r*v/100,g*v/100,b*v/100);
 }
 
 static inline string prettyBool(bool a){

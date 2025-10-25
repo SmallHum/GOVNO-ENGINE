@@ -14,6 +14,8 @@ namespace factory{
 
     shared_ptr<Node> create(const StructId& id);
 
+    shared_ptr<Node> copy(weak_ptr<Node> target);
+
     const string names[] = {
         "Node",
         "Spatial"

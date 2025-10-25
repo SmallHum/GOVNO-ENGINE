@@ -1,4 +1,4 @@
-#include <fstream_opers.h>
+#include <struct_loader.h>
 
 namespace factory{
     unordered_map<StructId, function<shared_ptr<Node>()>> creators;
@@ -11,6 +11,12 @@ namespace factory{
     shared_ptr<Node> create(const StructId& id){
         auto it = creators.find(id);
         return it != creators.end() ? it->second() : nullptr;
+    }
+
+    shared_ptr<Node> copy(weak_ptr<Node> target){
+        shared_ptr<Node> result = factory::create(target.lock()->getStructId());
+        result->copy(target.lock());
+        return result;
     }
 };
 

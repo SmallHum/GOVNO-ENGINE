@@ -1,9 +1,7 @@
 #include <core/controls.h>
-#include <core/viewport.h>
 #include <core/assets.h>
-
-#include <structs/spatial.h>
-#include <fstream_opers.h>
+#include <core/viewport.h>
+#include <struct_loader.h>
 
 #include <imgui/imgui.h>
 #include <imgui/imgui-SFML.h>
@@ -55,6 +53,7 @@ namespace editor{
 
     string str_input(const char *label){
         string result;
+        result.resize(128, ' ');
         ImGui::InputText(label, result.data(), result.size());
         return result;
     }
@@ -130,8 +129,8 @@ namespace editor{
         void multipleUnselectAll(vector<weak_ptr<TreeNode>> &multiple_selection){
             for(auto &i : multiple_selection){
                 auto p = i.lock();
-                cout << "NAME: " << p->ref.lock()->name << '\n';
-                cout << "MULT SEL INDEX: " << p->mult_sel_index << '\n';
+                // cout << "NAME: " << p->ref.lock()->name << '\n';
+                // cout << "MULT SEL INDEX: " << p->mult_sel_index << '\n';
                 p->is_multiple_selection = 0;
                 p->mult_sel_index = -1;
             }
@@ -141,28 +140,28 @@ namespace editor{
         void selectionProcess(weak_ptr<TreeNode> &active_selection, vector<weak_ptr<TreeNode>> &multiple_selection){
 
             if(ImGui::IsKeyDown(ImGuiKey_LeftShift)){
-                cout << "SHIFT SELECTION...\n";
+                // cout << "SHIFT SELECTION...\n";
                 if(is_multiple_selection && is_active_selection){
-                    cout << "MULTIPLE AND ACTIVE\n";
+                    // cout << "MULTIPLE AND ACTIVE\n";
                     multipleUnselect(multiple_selection);
                     activeUnselect(active_selection);
                 }
                 else if (is_multiple_selection && !is_active_selection){
-                    cout << "MULTIPLE BUT NOT ACTIVE\n";
+                    // cout << "MULTIPLE BUT NOT ACTIVE\n";
                     activeSelect(active_selection);
                 }
                 else if (!is_multiple_selection && is_active_selection){
-                    cout << "ACTIVE BUT NOT MULTIPLE\n";
+                    // cout << "ACTIVE BUT NOT MULTIPLE\n";
                     multipleSelect(multiple_selection);
                 }
                 else{
-                    cout << "NIETHER ACTIVE NOR MULTIPLE\n";
+                    // cout << "NIETHER ACTIVE NOR MULTIPLE\n";
                     activeSelect(active_selection);
                     multipleSelect(multiple_selection);
                 }
             }
             else {
-                cout << "NON SHIFT SELECTION WORKED\n";
+                // cout << "NON SHIFT SELECTION WORKED\n";
                 multipleUnselectAll(multiple_selection);
                 multipleSelect(multiple_selection);
                 activeSelect(active_selection);
@@ -263,6 +262,58 @@ namespace editor{
         }
     };
 
+    // Trying to implement undo/redo
+
+    // struct State{
+    //     string name;
+
+    //     weak_ptr<TreeNode> active_selection;
+    //     vector<weak_ptr<TreeNode>> multiple_selection;
+
+    //     shared_ptr<TreeNode> tree_root;
+    //     shared_ptr<Node> node_root;
+
+    //     State(string name, weak_ptr<TreeNode> tree_root, weak_ptr<Node> node_root){
+    //         *this->tree_root = *tree_root.lock().get();
+    //         this->node_root = make_shared<Node>(node_root);
+    //     }
+    // };
+
+    // vector<State> history;
+    // vector<State> redo_buffer;
+    // size_t max_history_size = 64;
+
+    // State &currentState(){
+    //     return history.back();
+    // }
+
+    // // Makes a new state in history.
+    // // Don't forget to write it before ANY action like pasting, deleting, renaming
+    // void newAction(string name = "TEST_ACTION"){
+    //     if(history.size() >= max_history_size)
+    //         history.erase(history.begin());
+    //     history.push_back(history.back());
+    //     history.back().name = name;
+    // }
+
+    // void undo(){
+    //     if(history.empty())
+    //         return;
+    //     redo_buffer.push_back(history.back());
+    //     history.pop_back();
+    // }
+
+    // void redo(){
+    //     if(redo_buffer.empty())
+    //         return;
+    //     history.push_back(redo_buffer.back());
+    //     redo_buffer.pop_back();
+    // }
+
+
+
+    //////////////
+
     vector<weak_ptr<TreeNode>> to_remove;
 
     weak_ptr<TreeNode> active_selection;
@@ -271,13 +322,11 @@ namespace editor{
     shared_ptr<TreeNode> tree_root;
     shared_ptr<Node> node_root;
 
-    bool selection_changed;
-
-    float scroll_y = 0.f;
+    shared_ptr<Node> node_clipboard;
 
     void init(){
         node_root = make_shared<Node>("root");
-        node_gen::genTree(node_root, 3);
+        node_gen::genTree(node_root, 2);
         node_root->printTree();
 
         editor::tree_root = make_shared<editor::TreeNode>();
@@ -313,6 +362,22 @@ namespace editor{
     void save(){
         if(!node_root)return;
         node_root->writeToFile("saved.ntr");
+    }
+
+    void copy(){
+        auto s = active_selection.lock()->ref;
+        if(s.expired())return;
+        node_clipboard = factory::copy(s);
+    }
+
+    void paste(){
+        if(auto n = active_selection.lock()->ref.lock()){
+            n->addChild(factory::copy(node_clipboard));
+            active_selection.lock()->update();
+            active_selection.lock()->show();
+            active_selection.lock()->children.back()->multipleUnselectAll(multiple_selection);
+            active_selection.lock()->children.back()->activeSelect(active_selection);
+        }
     }
 
     void spatialEditMenu(Spatial *node){
@@ -373,8 +438,8 @@ namespace editor{
             if(ImGui::BeginMenu("Edit")){
                 if(ImGui::MenuItem("New Node", "Ctrl+N"))ImGui::OpenPopup("Make Node");
                 if(ImGui::MenuItem("Delete Node", "Del"))selAction(deleteNode);
-                if(ImGui::MenuItem("Copy", "Ctrl+C"));
-                if(ImGui::MenuItem("Paste", "Ctrl+V"));
+                if(ImGui::MenuItem("Copy", "Ctrl+C"))copy();
+                if(ImGui::MenuItem("Paste", "Ctrl+V"))paste();
                 ImGui::EndMenu();
             }
 
@@ -392,7 +457,7 @@ namespace editor{
         if(ImGui::IsKeyPressed(ImGuiKey_C) && 
         (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) ||
         ImGui::IsKeyDown(ImGuiKey_RightCtrl))
-        );
+        )copy();
 
         if(ImGui::IsKeyPressed(ImGuiKey_S) && 
         (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) ||
@@ -402,7 +467,7 @@ namespace editor{
         if(ImGui::IsKeyPressed(ImGuiKey_V) && 
         (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) ||
         ImGui::IsKeyDown(ImGuiKey_RightCtrl))
-        );
+        )paste();
 
         if(ImGui::IsKeyPressed(ImGuiKey_O) && 
         (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) ||

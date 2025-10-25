@@ -1,4 +1,5 @@
-#include <fstream_opers.h>
+#include <structs/node.h>
+#include <struct_loader.h>
 
 Node::Node(){
     name = "Node";
@@ -141,6 +142,22 @@ void Node::writeToStream(fstream &stream){
 
     for(auto &i : children)
         i->writeToStream(stream);
+}
+
+void Node::copy(weak_ptr<Node> node){
+    if(auto n = node.lock()){
+        name = n->name;
+        active = n->active;
+        visible = n->visible;
+        for(auto &i : n->children){
+            shared_ptr<Node> result = factory::create(i->getStructId());
+            result->copy(i);
+            addChild(result);
+        }
+    }
+    else{
+        cout << "Node NOT constructed due to invalid pointer.\n";
+    }
 }
 
 Node::~Node(){

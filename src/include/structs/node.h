@@ -1,5 +1,6 @@
 #pragma once
 
+#include <config.h>
 #include <core/enums.h>
 
 struct Node : std::enable_shared_from_this<Node>{
@@ -63,6 +64,9 @@ struct Node : std::enable_shared_from_this<Node>{
     virtual void writer(fstream &stream);
     
     void writeToStream(fstream &stream);
+
+    // Copy tree
+    virtual void copy(weak_ptr<Node> node);
 
     ~Node();
 };

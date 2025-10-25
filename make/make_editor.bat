@@ -7,10 +7,10 @@ set "src=..\src"
 set "build=..\build"
 set "includes=-I..\SFML\include -I..\src\include"
 
-set "compile=%src%\tools\editor.cpp %src%\fstream_opers.cpp %src%\controls.cpp %src%\node.cpp %src%\spatial.cpp %src%\viewport.cpp %src%\assets.cpp"
+set "compile=%src%\tools\editor.cpp %src%\viewport.cpp %src%\assets.cpp %src%\struct_loader.cpp %src%\spatial.cpp %src%\node.cpp %src%\controls.cpp"
 
 set "imgui_obj=imgui.o imgui_impl_opengl3.o imgui_draw.o imgui_tables.o imgui_widgets.o imgui-SFML.o"
-set "myobj=editor.o fstream_opers.o controls.o node.o spatial.o viewport.o assets.o"
+set "myobj=editor.o viewport.o assets.o struct_loader.o spatial.o node.o controls.o"
 
 set "obj=%imgui_obj% %myobj%"
 

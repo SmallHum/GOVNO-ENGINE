@@ -37,4 +37,8 @@ struct Spatial : Node{
     virtual void writer(fstream &stream) override;
     
     virtual void printInfo(std::ostream& s) override;
+    
+    // Copy tree.
+    // Make sure the node in pointer is a spatial.
+    virtual void copy(weak_ptr<Node> node) override;
 };

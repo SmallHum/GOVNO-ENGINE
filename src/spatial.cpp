@@ -1,6 +1,6 @@
 #include <structs/spatial.h>
 #include <core/viewport.h>
-#include <fstream_opers.h>
+#include <struct_loader.h>
 
 namespace viewport{
     extern sf::CircleShape spatial_origin;
@@ -12,7 +12,7 @@ Spatial::Spatial(): Node(){
     pos = {0.f, 0.f};
     angle = 0.f;
     scale = {1.f,1.f};
-    debug_color = fromHue(rand()%360);
+    debug_color = hsv(rand());
     updateTransform();
 }
 
@@ -95,4 +95,21 @@ void Spatial::printInfo(std::ostream& s){
     " pos: " << pos << '\n' <<
     " angle: " << angle << '\n' <<
     " scale: " << scale << '\n';
+}
+
+void Spatial::copy(weak_ptr<Node> node){
+    Node::copy(node);
+    if(auto n = node.lock()){
+        auto spatial = dynamic_cast<Spatial*>(n.get());
+        if(spatial){
+            pos = spatial->pos;
+            angle = spatial->angle;
+            scale = spatial->scale;
+            debug_color = spatial->debug_color;
+            updateTransform();
+        }
+        else{
+            cout << "Spatial NOT constructed due to the pointer not being Spatial.\n";
+        }
+    }
 }
