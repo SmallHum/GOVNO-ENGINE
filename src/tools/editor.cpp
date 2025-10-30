@@ -4,6 +4,7 @@
 #include <struct_loader.h>
 
 #include <imgui/imgui.h>
+#include <imgui/imgui_stdlib.h>
 #include <imgui/imgui-SFML.h>
 
 namespace node_gen{
@@ -362,56 +363,63 @@ namespace editor{
         }
     }
 
+    void editFieldBool(string label, bool &v){
+        ImGui::Checkbox(label.c_str(), &v);
+    }
+
+    void editFieldFloat(string label, float &v){
+        float buffer = v;
+
+        if(!ImGui::InputFloat(label.c_str(), &buffer))
+            return;
+        if(!ImGui::IsKeyPressed(ImGuiKey_Enter))
+            return;
+
+        cout << "    applying " << label << '\n';
+        v = buffer;
+    }
+
+    void editFieldV2F(string label, v2f &v){
+        float buffer[2] = {v.x, v.y};
+
+        if(!ImGui::InputFloat2(label.c_str(), buffer))
+            return;
+        if(!ImGui::IsKeyPressed(ImGuiKey_Enter))
+            return;
+
+        cout << "    applying " << label << '\n';
+        v.x = buffer[0];
+        v.y = buffer[1];
+    }
+
+    void editFieldString(string label, string &v){
+        string buffer = v;
+
+        if(!ImGui::InputText("Name", &buffer))
+            return;
+        if(!ImGui::IsKeyPressed(ImGuiKey_Enter))
+            return;
+
+        cout << "    applying " << label << '\n';
+        v.resize(strlen(buffer.c_str()));
+        v = buffer;
+    }
+
     void AABBEditMenu(AABB *node){
         ImGui::SeparatorText("AABB");
-        // top
-        float top = node->top;
-        if(ImGui::InputFloat("Top", &top)){
-            cout << "    applying top\n";
-            node->top = top;
-        }
-        // bottom
-        float bottom = node->bottom;
-        if(ImGui::InputFloat("Bottom", &bottom)){
-            cout << "    applying bottom\n";
-            node->bottom = bottom;
-        }
-        // left
-        float left = node->left;
-        if(ImGui::InputFloat("Left", &left)){
-            cout << "    applying left\n";
-            node->left = left;
-        }
-        // right
-        float right = node->right;
-        if(ImGui::InputFloat("Right", &right)){
-            cout << "    applying right\n";
-            node->right = right;
-        }
+
+        editFieldFloat("Top", node->top);
+        editFieldFloat("Bottom", node->bottom);
+        editFieldFloat("Left", node->left);
+        editFieldFloat("Right", node->right);
     }
 
     void spatialEditMenu(Spatial *node){
         ImGui::SeparatorText("Spatial");
-        // pos
-        float pos[2] = {node->pos.x, node->pos.y}; 
-        if(ImGui::InputFloat2("Position", pos)){
-            cout << "    applying pos\n";
-            node->pos.x = pos[0];
-            node->pos.y = pos[1];
-        }
-        // angle
-        float angle = node->angle;
-        if(ImGui::InputFloat("Angle", &angle)){
-            cout << "    applying angle\n";
-            node->angle = angle;
-        }
-        // scale
-        float scale[2] = {node->scale.x, node->scale.y}; 
-        if(ImGui::InputFloat2("Scale", scale)){
-            cout << "    applying scale\n";
-            node->scale.x = scale[0];
-            node->scale.y = scale[1];
-        }
+
+        editFieldV2F("Position", node->pos);
+        editFieldFloat("Angle", node->angle);
+        editFieldV2F("Scale", node->scale);
 
         auto aabb = dynamic_cast<AABB*>(node);
         if(aabb)AABBEditMenu(aabb);
@@ -420,13 +428,8 @@ namespace editor{
     void nodeEditMenu(Node *node){
         ImGui::SeparatorText("Node");
 
-        string name = node->name;
-        if(ImGui::InputText("Name", name.data(), name.capacity()+1)){
-            name.resize(strlen(name.c_str()));
-            node->name = name;
-        }
-
-        ImGui::Checkbox("Visible", &node->visible);
+        editFieldString("Name", node->name);
+        editFieldBool("Visible", node->visible);
 
         auto s = dynamic_cast<Spatial*>(node);
         if(s)spatialEditMenu(s);
@@ -434,7 +437,6 @@ namespace editor{
 
     void process(float &dt){
         id_fix = 0;
-        any_editor_window_focused = 0;
 
         // Menu bar.
         // TODO: 
@@ -456,7 +458,6 @@ namespace editor{
                 ImGui::EndMenu();
             }
 
-            any_editor_window_focused = ImGui::IsWindowFocused() || ImGui::IsAnyItemFocused() || any_editor_window_focused;
             ImGui::EndMainMenuBar();
         }
 
@@ -511,13 +512,12 @@ namespace editor{
         
         tree_root->drawCol2();
 
-        any_editor_window_focused = ImGui::IsWindowFocused() || ImGui::IsAnyItemFocused() || any_editor_window_focused;
         ImGui::End();
 
         // Node editing window.
         // Kinda stolen from Godot.
-        edit_pos_x = viewport::wind.getSize().x - edit_width;
-        ImGui::SetNextWindowPos({edit_pos_x,bar_height_button_size});
+        // edit_pos_x = viewport::wind.getSize().x - edit_width;
+        // ImGui::SetNextWindowPos({edit_pos_x,bar_height_button_size});
         ImGui::SetNextWindowSize({edit_width,height});
         ImGui::SetNextWindowSizeConstraints(
             {240,height},
@@ -533,7 +533,6 @@ namespace editor{
             if(auto s = sel->ref.lock())
                 nodeEditMenu(s.get());
 
-        any_editor_window_focused = ImGui::IsWindowFocused() || ImGui::IsAnyItemFocused() || any_editor_window_focused;
         ImGui::End();
 
         // Make node popup.
@@ -547,7 +546,6 @@ namespace editor{
                 }
             }
 
-            any_editor_window_focused = ImGui::IsWindowFocused() || ImGui::IsAnyItemFocused() || any_editor_window_focused;
             ImGui::EndPopup();
         }
 
@@ -568,7 +566,15 @@ namespace editor{
             multiple_selection.clear();
             active_selection.reset();
         }
+        
+        any_editor_window_focused = ImGui::IsWindowFocused(
+            ImGuiFocusedFlags_AnyWindow | 
+            ImGuiFocusedFlags_ChildWindows
+        ) || ImGui::IsAnyItemFocused();
 
+        if(any_editor_window_focused)return;
+
+        // Interaction with viewport
         if(auto s = active_selection.lock()){
             auto p = dynamic_cast<Spatial*>(s->ref.lock().get());
             if(p){
@@ -637,7 +643,7 @@ int main(){
         updateControls();
 
         //physics
-        viewport::bg_color = editor::any_editor_window_focused ? sf::Color(63,63,0) : sf::Color::Black;
+        // viewport::bg_color = editor::any_editor_window_focused ? sf::Color(63,63,0) : sf::Color::Black;
 
         //render
 
