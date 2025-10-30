@@ -44,6 +44,7 @@ namespace node_gen{
 namespace editor{
 
     int id_fix;
+    bool any_editor_window_focused = 0;
 
     float tree_view_width = 240,
         actions_width = 160,
@@ -172,13 +173,13 @@ namespace editor{
             if(!ref.lock())
                 return;
 
+            ImGui::PushID(id_fix++);
+
             Node *n = ref.lock().get();
 
-            ImGui::SetWindowPos({depth*16.f,bar_height_button_size});
+            ImGui::SetCursorPosX(depth*16.f + ImGui::GetCursorPosX());
 
             const char *button_icon = collapsed ? ">" : "v";
-            
-            ImGui::PushID(id_fix++);
 
             if(is_active_selection){
                 ImGui::PushStyleColor(ImGuiCol_ChildBg, {0.2f, 0.3f, 0.5f, 1.0f});
@@ -264,53 +265,34 @@ namespace editor{
 
     // Trying to implement undo/redo
 
-    // struct State{
-    //     string name;
+    // typedef int data_t;
 
-    //     weak_ptr<TreeNode> active_selection;
-    //     vector<weak_ptr<TreeNode>> multiple_selection;
+    // struct Action{
+    //     Action(){execute();}
+    //     virtual void execute();
+    //     virtual void undo();
+    // };
 
-    //     shared_ptr<TreeNode> tree_root;
-    //     shared_ptr<Node> node_root;
+    // struct Paste: Action{
+    //     data_t clipboard;
+    //     vector<data_t>& data;
+    //     vector<data_t>::iterator index;
 
-    //     State(string name, weak_ptr<TreeNode> tree_root, weak_ptr<Node> node_root){
-    //         *this->tree_root = *tree_root.lock().get();
-    //         this->node_root = make_shared<Node>(node_root);
+    //     Paste(data_t clipboard, vector<data_t> &data, size_t index): 
+    //     clipboard(clipboard),
+    //     data(data),
+    //     index(data.begin() + index){
+    //         execute();
+    //     }
+    //     void execute() override{
+    //         data.insert(index, clipboard);
+    //     }
+    //     void undo() override{
+    //         data.erase(index);
     //     }
     // };
 
-    // vector<State> history;
-    // vector<State> redo_buffer;
-    // size_t max_history_size = 64;
-
-    // State &currentState(){
-    //     return history.back();
-    // }
-
-    // // Makes a new state in history.
-    // // Don't forget to write it before ANY action like pasting, deleting, renaming
-    // void newAction(string name = "TEST_ACTION"){
-    //     if(history.size() >= max_history_size)
-    //         history.erase(history.begin());
-    //     history.push_back(history.back());
-    //     history.back().name = name;
-    // }
-
-    // void undo(){
-    //     if(history.empty())
-    //         return;
-    //     redo_buffer.push_back(history.back());
-    //     history.pop_back();
-    // }
-
-    // void redo(){
-    //     if(redo_buffer.empty())
-    //         return;
-    //     history.push_back(redo_buffer.back());
-    //     redo_buffer.pop_back();
-    // }
-
-
+    // vector<shared_ptr<Action>> history;
 
     //////////////
 
@@ -380,6 +362,34 @@ namespace editor{
         }
     }
 
+    void AABBEditMenu(AABB *node){
+        ImGui::SeparatorText("AABB");
+        // top
+        float top = node->top;
+        if(ImGui::InputFloat("Top", &top)){
+            cout << "    applying top\n";
+            node->top = top;
+        }
+        // bottom
+        float bottom = node->bottom;
+        if(ImGui::InputFloat("Bottom", &bottom)){
+            cout << "    applying bottom\n";
+            node->bottom = bottom;
+        }
+        // left
+        float left = node->left;
+        if(ImGui::InputFloat("Left", &left)){
+            cout << "    applying left\n";
+            node->left = left;
+        }
+        // right
+        float right = node->right;
+        if(ImGui::InputFloat("Right", &right)){
+            cout << "    applying right\n";
+            node->right = right;
+        }
+    }
+
     void spatialEditMenu(Spatial *node){
         ImGui::SeparatorText("Spatial");
         // pos
@@ -402,6 +412,9 @@ namespace editor{
             node->scale.x = scale[0];
             node->scale.y = scale[1];
         }
+
+        auto aabb = dynamic_cast<AABB*>(node);
+        if(aabb)AABBEditMenu(aabb);
     }
 
     void nodeEditMenu(Node *node){
@@ -421,6 +434,7 @@ namespace editor{
 
     void process(float &dt){
         id_fix = 0;
+        any_editor_window_focused = 0;
 
         // Menu bar.
         // TODO: 
@@ -428,7 +442,6 @@ namespace editor{
         // - Folder view on open and save.
         // - Discartion alert on opening.
         if(ImGui::BeginMainMenuBar()){
-
             if(ImGui::BeginMenu("File")){
                 if(ImGui::MenuItem("Open", "Ctrl+O"))open();
                 if(ImGui::MenuItem("Save", "Ctrl+S"))save();
@@ -443,6 +456,7 @@ namespace editor{
                 ImGui::EndMenu();
             }
 
+            any_editor_window_focused = ImGui::IsWindowFocused() || ImGui::IsAnyItemFocused() || any_editor_window_focused;
             ImGui::EndMainMenuBar();
         }
 
@@ -497,6 +511,7 @@ namespace editor{
         
         tree_root->drawCol2();
 
+        any_editor_window_focused = ImGui::IsWindowFocused() || ImGui::IsAnyItemFocused() || any_editor_window_focused;
         ImGui::End();
 
         // Node editing window.
@@ -513,10 +528,12 @@ namespace editor{
             | ImGuiWindowFlags_NoCollapse 
             | ImGuiWindowFlags_NoScrollWithMouse);
 
+
         if(auto sel = active_selection.lock())
             if(auto s = sel->ref.lock())
                 nodeEditMenu(s.get());
 
+        any_editor_window_focused = ImGui::IsWindowFocused() || ImGui::IsAnyItemFocused() || any_editor_window_focused;
         ImGui::End();
 
         // Make node popup.
@@ -530,6 +547,7 @@ namespace editor{
                 }
             }
 
+            any_editor_window_focused = ImGui::IsWindowFocused() || ImGui::IsAnyItemFocused() || any_editor_window_focused;
             ImGui::EndPopup();
         }
 
@@ -619,6 +637,7 @@ int main(){
         updateControls();
 
         //physics
+        viewport::bg_color = editor::any_editor_window_focused ? sf::Color(63,63,0) : sf::Color::Black;
 
         //render
 

@@ -4,6 +4,6 @@
 enum class StructId{
     Node = 0,
     Spatial,
-    Sprite,
-    AABB
+    AABB,
+    Sprite
 };

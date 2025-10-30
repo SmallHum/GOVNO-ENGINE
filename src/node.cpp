@@ -70,13 +70,13 @@ void Node::printTree(int spaces){
     cout << name << '\n';
     for(auto& i : children) i->printTree(spaces+1);
 }
-void Node::printInfo(std::ostream& s){
-    s << (int)getStructId() << '\n';
-    s << "Node:\n" <<
-    " name: " << name << '\n' <<
-    " active: " << prettyBool(active) << '\n' <<
-    " visible: " << prettyBool(visible) << '\n';
-}
+// void Node::printInfo(std::ostream& s){
+//     s << (int)getStructId() << '\n';
+//     s << "Node:\n" <<
+//     " name: " << name << '\n' <<
+//     " active: " << prettyBool(active) << '\n' <<
+//     " visible: " << prettyBool(visible) << '\n';
+// }
 
 void Node::onCreation(){}
 

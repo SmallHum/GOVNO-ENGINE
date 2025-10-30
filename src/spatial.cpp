@@ -2,11 +2,6 @@
 #include <core/viewport.h>
 #include <struct_loader.h>
 
-namespace viewport{
-    extern sf::CircleShape spatial_origin;
-    extern sf::Text spatial_name;
-};
-
 Spatial::Spatial(): Node(){
     name = "Spatial";
     pos = {0.f, 0.f};
@@ -89,13 +84,13 @@ void Spatial::writer(fstream &stream){
     fstreamWriteV2f(stream, scale);
 }
 
-void Spatial::printInfo(std::ostream& s){
-    Node::printInfo(s);
-    s << "Spatial:\n" <<
-    " pos: " << pos << '\n' <<
-    " angle: " << angle << '\n' <<
-    " scale: " << scale << '\n';
-}
+// void Spatial::printInfo(std::ostream& s){
+//     Node::printInfo(s);
+//     s << "Spatial:\n" <<
+//     " pos: " << pos << '\n' <<
+//     " angle: " << angle << '\n' <<
+//     " scale: " << scale << '\n';
+// }
 
 void Spatial::copy(weak_ptr<Node> node){
     Node::copy(node);

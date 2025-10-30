@@ -34,8 +34,6 @@ namespace debug{
 
     extern sf::Text fps_text,
                 node_info;
-    extern sf::RectangleShape sprite_bounds,
-                        aabb_bounds;
     extern sf::VertexArray axis_x;
     extern sf::VertexArray axis_y;
 
@@ -50,6 +48,8 @@ namespace debug{
     void showAll();
 
     sf::Text *spatial_name(string &name, sf::Color &debug_color);
+    sf::RectangleShape *aabb_bounds(float &top, float &bottom, float &left, float &right,
+        sf::Color &debug_color);
 };
 
 namespace viewport{

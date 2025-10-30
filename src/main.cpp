@@ -1,5 +1,7 @@
 #include <core/controls.h>
 #include <core/assets.h>
+#include <core/viewport.h>
+#include <struct_loader.h>
 
 #include <struct_loader.h>
 

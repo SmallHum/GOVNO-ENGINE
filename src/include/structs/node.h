@@ -51,7 +51,7 @@ struct Node : std::enable_shared_from_this<Node>{
     shared_ptr<Node> find(string path);
 
     void printTree(int spaces = 0);
-    virtual void printInfo(std::ostream& s);
+    // virtual void printInfo(std::ostream& s);
 
     // Save node tree to file. Usually that's what you'd want to use.
     // ```writeToStream``` is used for recursive calls.

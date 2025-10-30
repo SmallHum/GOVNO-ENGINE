@@ -16,10 +16,9 @@ struct Spatial : Node{
     Spatial();
 
     Spatial(string name,
-        v2f pos, float angle = 0.f, v2f scale = {1.f,1.f}, sf::Color debug_color = sf::Color::White
+        v2f pos, float angle = 0.f, v2f scale = {1.f,1.f},
+        sf::Color debug_color = sf::Color::White
     );
-
-    virtual StructId getStructId() override;
 
     void updateLocalTransform();
 
@@ -29,6 +28,8 @@ struct Spatial : Node{
 
     v2f getGlobalPos();
 
+    virtual StructId getStructId() override;
+
     virtual void drawDebug() override;
 
     virtual void process() override;
@@ -36,7 +37,7 @@ struct Spatial : Node{
     virtual void reader(fstream &stream) override;
     virtual void writer(fstream &stream) override;
     
-    virtual void printInfo(std::ostream& s) override;
+    // virtual void printInfo(std::ostream& s) override;
     
     // Copy tree.
     // Make sure the node in pointer is a spatial.

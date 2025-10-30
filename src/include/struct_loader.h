@@ -1,6 +1,6 @@
 #pragma once
 
-#include <structs/spatial.h>
+#include <structs/aabb.h>
 
 namespace factory{
     extern unordered_map<StructId, function<shared_ptr<Node>()>> creators;
@@ -18,7 +18,9 @@ namespace factory{
 
     const string names[] = {
         "Node",
-        "Spatial"
+        "Spatial",
+        "AABB",
+        "Sprite"
     };
 };
 

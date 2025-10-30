@@ -12,8 +12,6 @@ namespace debug{
 
     sf::Text fps_text(default_font),
                 node_info(default_font);
-    sf::RectangleShape sprite_bounds,
-                        aabb_bounds;
     sf::VertexArray axis_x(sf::PrimitiveType::LineStrip,5);
     sf::VertexArray axis_y(sf::PrimitiveType::LineStrip,5);
 
@@ -75,6 +73,17 @@ namespace debug{
 
         return result;
     }
+
+    sf::RectangleShape *aabb_bounds(float &top, float &bottom, float &left, float &right,
+        sf::Color &debug_color){
+            sf::RectangleShape *result = new sf::RectangleShape(v2f(right-left,bottom-top));
+            result->setOutlineColor(debug_color);
+            result->setOutlineThickness(1.f);
+            result->setFillColor(sf::Color::Transparent);
+            result->move(v2f(left,top));
+
+            return result;
+        }
 }
 
 namespace viewport{
@@ -98,7 +107,7 @@ namespace viewport{
         wind.clear(bg_color);
         if(debug::show_fps){
             debug::fps_text.setString(std::to_string(1.0/dt));
-            drawOver(new sf::Text(debug::fps_text), 0, 1);
+            drawOver(&debug::fps_text, 0, 1);
         }
         while(!draw_queue.empty()){
             DrawInfo curr = draw_queue.top();
