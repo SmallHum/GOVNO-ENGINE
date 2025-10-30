@@ -47,7 +47,10 @@ namespace node_gen{
 namespace editor{
 
     int id_fix;
-    bool any_editor_window_focused = 0;
+    bool any_editor_window_focused = 0,
+        controlling_camera = 0;
+
+    v2f cam_pos = {-480.f, -360.f};
 
     float tree_view_width = 240,
         actions_width = 160,
@@ -449,8 +452,11 @@ namespace editor{
             if(ImGui::BeginMenu("Edit")){
                 if(ImGui::MenuItem("New Node", "Ctrl+N"))ImGui::OpenPopup("Make Node");
                 if(ImGui::MenuItem("Delete Node", "Del"))selAction(deleteNode);
+                ImGui::Separator();
                 if(ImGui::MenuItem("Copy", "Ctrl+C"))copy();
                 if(ImGui::MenuItem("Paste", "Ctrl+V"))paste();
+                ImGui::Separator();
+                if(ImGui::MenuItem("Move Camera", "Shift+F"))controlling_camera = 1;
                 ImGui::EndMenu();
             }
 
@@ -484,6 +490,10 @@ namespace editor{
         (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) ||
         ImGui::IsKeyDown(ImGuiKey_RightCtrl))
         )open();
+
+        if(ImGui::IsKeyPressed(ImGuiKey_F) &&
+            (ImGui::IsKeyDown(ImGuiKey_LeftShift) || 
+            ImGui::IsKeyDown(ImGuiKey_RightShift)))controlling_camera = 1;
 
         float height = viewport::wind.getSize().y-bar_height_button_size;
 
@@ -570,8 +580,12 @@ namespace editor{
 
         if(any_editor_window_focused)return;
 
-        // Interaction with viewport
-        if(auto s = active_selection.lock()){
+        if(controlling_camera){
+            cam_pos += 600.f * dt * v2f(getDirHeld());
+            if(ImGui::IsKeyPressed(ImGuiKey_Escape))
+                controlling_camera = 0;
+        }
+        else if(auto s = active_selection.lock()){
             auto p = dynamic_cast<Spatial*>(s->ref.lock().get());
             if(p){
                 p->pos += 150.f * dt * v2f(getDirHeld());
@@ -641,6 +655,7 @@ int main(){
         //physics
         // viewport::bg_color = editor::any_editor_window_focused ? sf::Color(63,63,0) : sf::Color::Black;
 
+        viewport::cam_pos = editor::cam_pos;
         //render
 
         // cout << "node processing...\n";

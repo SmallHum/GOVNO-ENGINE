@@ -3,7 +3,7 @@
 // Loads independent asset map, from file
 template <typename T>
 void Pack::loadAsset(
-        map<string, shared_ptr<T>> &assets_list, 
+        map<string, T> &assets_list, 
         std::filesystem::path path
 ){
     if(std::filesystem::exists(path) && std::filesystem::is_directory(path)) {
@@ -20,7 +20,10 @@ void Pack::loadAsset(
                 if(!std::filesystem::is_regular_file(file.status())){
                     cout << "ERROR: Couldn't read file \"" << str_path << "\"\n"; continue;
                 }
-                assets_list[clear_name] = make_shared<T>(T(str_path));
+                // assets_list.insert(
+                //     pair<const string, T>(clear_name, T(str_path))
+                // );
+                assets_list.insert_or_assign(clear_name, T(str_path));
             }
     }
     else{
@@ -31,19 +34,25 @@ void Pack::loadAsset(
 // Loads a dependent asset map, from another asset map
 template <typename T, typename Dependency>
 void Pack::loadAsset(
-        map<string, shared_ptr<T>> &assets_list, 
-        map<string,shared_ptr<Dependency>> &d_map
+        map<string, T> &assets_list, 
+        map<string,Dependency> &d_map
 ){
     for(auto &i : d_map){
-        assets_list[i.first] = make_shared<T>(T(*i.second));
+        // assets_list.insert(
+        //     pair<const string, Dependency>(i.first, T(i.second))
+        // );
+        assets_list.insert_or_assign(i.first, T(i.second));
     }
 }
 
-weak_ptr<sf::Sprite> Pack::getSpr(const std::string key){
-    return sprites[key];
-}
-weak_ptr<sf::Texture> Pack::getTex(const std::string key){
-    return textures[key];
+template<typename Key, typename Val>
+Val &find(map<Key, Val> &map, Key key){
+    auto result = map.find(key);
+    if(result == map.end()){
+        cout << "Value by key " << key << "not found.\n";
+        throw std::exception();
+    }
+    return result->second;
 }
 
 namespace assets{
@@ -72,7 +81,7 @@ namespace assets{
         pack.loadAsset<sf::SoundBuffer>(pack.sound_buffers, sfx_path);
         pack.loadAsset<sf::Sound,sf::SoundBuffer>(pack.sfx, pack.sound_buffers);
 
-        pack.loadAsset<sf::Font>(pack.fonts,font_path);
+        // pack.loadAsset<sf::Font>(pack.fonts,font_path);
         printData();
     }
     void unloadPack(string pack_name){
@@ -95,46 +104,48 @@ namespace assets{
             for(auto &j : i.second.sfx)
                 cout << "    " << j.first << '\n';
 
-            cout << "  Fonts:\n";
-            for(auto &j : i.second.fonts)
-                cout << "    " << j.first << '\n';
+            // cout << "  Fonts:\n";
+            // for(auto &j : i.second.fonts)
+            //     cout << "    " << j.first << '\n';
         }
         cout << '\n';
     }
 
-    weak_ptr<sf::Sprite> getSp(const string name){
+    sf::Sprite &getSp(const string name){
         size_t colon_index = name.find_first_of(':');
         string pack = name.substr(0,colon_index),
                 asset = name.substr(colon_index+1,name.length()-colon_index-1);
 
-        return packs[pack].sprites[asset];
+        return find(packs[pack].sprites, asset);
     }
-    weak_ptr<sf::Texture> getT(const string name){
+    sf::Texture &getT(const string name){
         size_t colon_index = name.find_first_of(':');
         string pack = name.substr(0,colon_index),
                 asset = name.substr(colon_index+1,name.length()-colon_index-1);
 
-        return packs[pack].textures[asset];
+        return find(packs[pack].textures, asset);
     }
-    weak_ptr<sf::Music> getM(const string name){
+    sf::Music &getM(const string name){
         size_t colon_index = name.find_first_of(':');
         string pack = name.substr(0,colon_index),
                 asset = name.substr(colon_index+1,name.length()-colon_index-1);
 
-        return packs[pack].music[asset];
+        return find(packs[pack].music, asset);
     }
-    weak_ptr<sf::Sound> getSf(const string name){
+    sf::Sound &getSf(const string name){
         size_t colon_index = name.find_first_of(':');
         string pack = name.substr(0,colon_index),
                 asset = name.substr(colon_index+1,name.length()-colon_index-1);
 
-        return packs[pack].sfx[asset];
+        return find(packs[pack].sfx, asset);
     }
-    weak_ptr<sf::Font> getF(const string name){
-        size_t colon_index = name.find_first_of(':');
-        string pack = name.substr(0,colon_index),
-                asset = name.substr(colon_index+1,name.length()-colon_index-1);
 
-        return packs[pack].fonts[asset];
-    }
+    // i think we dont need it anymore
+    // sf::Font &getF(const string name){
+    //     size_t colon_index = name.find_first_of(':');
+    //     string pack = name.substr(0,colon_index),
+    //             asset = name.substr(colon_index+1,name.length()-colon_index-1);
+
+    //     return find(packs[pack].fonts, asset);
+    // }
 };
