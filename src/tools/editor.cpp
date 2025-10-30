@@ -1,3 +1,5 @@
+#define EDITOR
+
 #include <core/controls.h>
 #include <core/assets.h>
 #include <core/viewport.h>
@@ -52,13 +54,6 @@ namespace editor{
         bar_height_button_size = 26,
         edit_width = 240,
         edit_pos_x;
-
-    string str_input(const char *label){
-        string result;
-        result.resize(128, ' ');
-        ImGui::InputText(label, result.data(), result.size());
-        return result;
-    }
 
     struct TreeNode : std::enable_shared_from_this<TreeNode>{
         weak_ptr<Node> ref;
@@ -372,6 +367,7 @@ namespace editor{
 
         if(!ImGui::InputFloat(label.c_str(), &buffer))
             return;
+
         if(!ImGui::IsKeyPressed(ImGuiKey_Enter))
             return;
 
@@ -516,8 +512,8 @@ namespace editor{
 
         // Node editing window.
         // Kinda stolen from Godot.
-        // edit_pos_x = viewport::wind.getSize().x - edit_width;
-        // ImGui::SetNextWindowPos({edit_pos_x,bar_height_button_size});
+        edit_pos_x = viewport::wind.getSize().x - edit_width;
+        ImGui::SetNextWindowPos({edit_pos_x,bar_height_button_size});
         ImGui::SetNextWindowSize({edit_width,height});
         ImGui::SetNextWindowSizeConstraints(
             {240,height},
