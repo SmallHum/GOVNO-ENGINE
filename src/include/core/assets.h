@@ -1,4 +1,7 @@
-#pragma once
+// #pragma once
+
+#ifndef GVE_ASSETS_H
+#define GVE_ASSETS_H
 
 #include <config.h>
 
@@ -42,3 +45,5 @@ namespace assets{
 #define getMusic assets::getM
 #define getSfx assets::getSf
 // #define getFont assets::getF
+
+#endif

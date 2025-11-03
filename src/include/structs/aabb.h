@@ -1,4 +1,7 @@
-#pragma once
+// #pragma once
+
+#ifndef GVE_AABB_H
+#define GVE_AABB_H
 
 #include <structs/spatial.h>
 
@@ -19,10 +22,10 @@ struct AABB: Spatial{
         sf::Color debug_color = sf::Color::White
     );
 
-    bool intersectPoint(shared_ptr<Spatial> spatial);
+    bool intersectPoint(shared_ptr<Node> spatial);
     bool intersectPoint(v2f pos);
 
-    bool intersectAABB(shared_ptr<AABB> other);
+    bool intersectAABB(shared_ptr<Node> other);
 
     virtual StructId getStructId() override;
 
@@ -41,3 +44,5 @@ struct AABB: Spatial{
 
 
 };
+
+#endif

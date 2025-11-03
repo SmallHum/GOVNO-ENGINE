@@ -24,9 +24,10 @@ AABB::AABB(string name,
 
     }
 
-bool AABB::intersectPoint(shared_ptr<Spatial> spatial){
-    if(!spatial){cout << "WARNING: invalid Spatial pointer parsed to AABB::intersectPoint"; return 0;}
-    return intersectPoint(spatial->getGlobalPos());
+bool AABB::intersectPoint(shared_ptr<Node> spatial){
+    auto s = dynamic_cast<Spatial*>(spatial.get());
+    if(!s){cout << "WARNING: invalid Spatial pointer parsed to AABB::intersectPoint"; return 0;}
+    return intersectPoint(s->getGlobalPos());
 }
 bool AABB::intersectPoint(v2f pos){
     v2f global_pos = getGlobalPos();
@@ -39,23 +40,26 @@ bool AABB::intersectPoint(v2f pos){
             global_top <= pos.y && pos.y <= global_bottom;
 }
 
-bool AABB::intersectAABB(shared_ptr<AABB> other){
-    if(!other){cout << "WARNING: invalid AABB pointer parsed to AABB::intersectAABB"; return 0;}
+bool AABB::intersectAABB(shared_ptr<Node> other){
+    auto o = dynamic_cast<AABB*>(other.get());
+    if(!o){cout << "WARNING: invalid AABB pointer parsed to AABB::intersectAABB"; return 0;}
     v2f global_pos = getGlobalPos(),
-        other_global_pos = other->getGlobalPos();
+        other_global_pos = o->getGlobalPos();
 
     float global_top = global_pos.y + top;
     float global_bottom = global_pos.y + bottom;
     float global_left = global_pos.x + left;
     float global_right = global_pos.x + right;
     
-    float other_global_top = global_pos.y + other->top;
-    float other_global_bottom = global_pos.y + other->bottom;
-    float other_global_left = global_pos.x + other->left;
-    float other_global_right = global_pos.x + other->right;
+    float other_global_top = other_global_pos.y + o->top;
+    float other_global_bottom = other_global_pos.y + o->bottom;
+    float other_global_left = other_global_pos.x + o->left;
+    float other_global_right = other_global_pos.x + o->right;
 
-    return global_top >= other_global_bottom && global_bottom <= other_global_top &&
-            global_left >= other_global_right && global_right <= other_global_left;
+    cout << "trying btw...\n";
+
+    return global_top <= other_global_bottom && global_bottom >= other_global_top &&
+            global_left <= other_global_right && global_right >= other_global_left;
 }
 
 StructId AABB::getStructId(){

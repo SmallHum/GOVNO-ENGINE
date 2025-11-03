@@ -1,4 +1,7 @@
-#pragma once
+// #pragma once
+
+#ifndef GVE_CONTROLS_H
+#define GVE_CONTROLS_H
 
 #include <config.h>
 
@@ -54,3 +57,5 @@ namespace controls{
 #define ACT_3 controls::A_3
 
 #define ACT_CNSL controls::A_CNSL
+
+#endif

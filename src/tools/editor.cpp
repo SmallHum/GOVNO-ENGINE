@@ -305,9 +305,16 @@ namespace editor{
 
     shared_ptr<Node> node_clipboard;
 
+    //temporary
+    // shared_ptr<Node> other;
+
     void init(){
         node_root = make_shared<Node>("root");
         node_gen::genTree(node_root, 2);
+
+        // other = make_shared<AABB>();
+        // node_root->addChild(other);
+
         node_root->printTree();
 
         editor::tree_root = make_shared<editor::TreeNode>();
@@ -592,6 +599,11 @@ namespace editor{
                 if(ImGui::IsKeyDown(ImGuiKey_Q))p->angle += 50.f * dt;
                 if(ImGui::IsKeyDown(ImGuiKey_W))p->angle -= 50.f * dt;
             }
+
+            // auto aabb = dynamic_cast<AABB*>(s->ref.lock().get());
+            // if(aabb)
+            //     if(aabb->intersectAABB(other))
+            //         cout << "COLLISION DETECTED YAY!!!\n";
         }
     }
 };
@@ -615,6 +627,10 @@ void init(){
     if(!imgui_init_complete){
         cout << "Note: couldn't init ImGUI in SFML window for some reason.\n";
     }
+
+    #ifdef NAYOBKA_ALYO
+        cout << "BLYAT VSMISHLE\n";
+    #endif
 }
 
 void exit(){

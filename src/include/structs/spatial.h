@@ -1,4 +1,7 @@
-#pragma once
+// #pragma once
+
+#ifndef GVE_SPATIAL_H
+#define GVE_SPATIAL_H
 
 #include <structs/node.h>
 
@@ -43,3 +46,5 @@ struct Spatial : Node{
     // Make sure the node in pointer is a spatial.
     virtual void copy(weak_ptr<Node> node) override;
 };
+
+#endif

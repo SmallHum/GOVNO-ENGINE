@@ -1,4 +1,7 @@
-#pragma once
+// #pragma once
+
+#ifndef GVE_CONFIG_H
+#define GVE_CONFIG_H
 
 //sfml includes
 #include <SFML/Graphics.hpp>
@@ -8,13 +11,13 @@
 #include <iostream>
 #include <windows.h>
 #include <cstdlib>
-#include <math.h>
+// #include <math.h>
 #include <string>
-#include <vector>
+// #include <vector>
 #include <queue>
 #include <map>
 #include <set>
-#include <memory>
+// #include <memory>
 #include <functional>
 #include <thread>
 #include <fstream>
@@ -127,3 +130,5 @@ static std::ostream& operator << (std::ostream& s, mat3 v){
         s << v.getMatrix()[i] << ' ';
     return s;
 }
+
+#endif

@@ -67,19 +67,19 @@ namespace assets{
         std::filesystem::path sprites_path("assets/"+pack_name+"/sprites");
         std::filesystem::path music_path("assets/"+pack_name+"/music");
         std::filesystem::path sfx_path("assets/"+pack_name+"/sfx");
-        std::filesystem::path font_path("assets/"+pack_name+"/fonts");
+        // std::filesystem::path font_path("assets/"+pack_name+"/fonts");
 
         packs.insert({pack_name,Pack()});
 
         auto &pack = packs[pack_name];
 
-        pack.loadAsset<sf::Texture>(pack.textures,sprites_path);
-        pack.loadAsset<sf::Sprite,sf::Texture>(pack.sprites,pack.textures);
+        pack.loadAsset(pack.textures,sprites_path);
+        pack.loadAsset(pack.sprites,pack.textures);
 
-        pack.loadAsset<sf::Music>(pack.music, music_path);
+        pack.loadAsset(pack.music, music_path);
 
-        pack.loadAsset<sf::SoundBuffer>(pack.sound_buffers, sfx_path);
-        pack.loadAsset<sf::Sound,sf::SoundBuffer>(pack.sfx, pack.sound_buffers);
+        pack.loadAsset(pack.sound_buffers, sfx_path);
+        pack.loadAsset(pack.sfx, pack.sound_buffers);
 
         // pack.loadAsset<sf::Font>(pack.fonts,font_path);
         printData();

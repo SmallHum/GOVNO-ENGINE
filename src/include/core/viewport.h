@@ -1,4 +1,7 @@
-#pragma once
+// #pragma once
+
+#ifndef GVE_VIEWPORT_H
+#define GVE_VIEWPORT_H
 
 #include <config.h>
 
@@ -77,3 +80,5 @@ namespace viewport{
 
     void exit();
 };
+
+#endif

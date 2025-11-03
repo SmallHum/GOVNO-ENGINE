@@ -1,17 +1,20 @@
-#pragma once
+// #pragma once
+
+#ifndef GVE_FONT_H
+#define GVE_FONT_H
 
 #include <config.h>
 
 // All the fonts are unfortunately monospace
 // Fonts must be made from images with 16x16 character layout.
-struct Font{
+struct GVEFont : std::enable_shared_from_this<GVEFont>{
 
     v2i char_size;
     sf::Texture &atlas;
 
     sf::Sprite *letters[256] = {nullptr};
 
-    Font(sf::Texture &atlas): atlas(atlas){
+    GVEFont(sf::Texture &atlas): atlas(atlas){
         char_size.x = atlas.getSize().x/16;
         char_size.y = atlas.getSize().y/16;
 
@@ -31,8 +34,10 @@ struct Font{
         return letters[a];
     }
 
-    ~Font(){
+    ~GVEFont(){
         for(auto i : letters)
             delete i;
     }
 };
+
+#endif

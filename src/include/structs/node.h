@@ -1,4 +1,7 @@
-#pragma once
+// #pragma once
+
+#ifndef GVE_NODE_H
+#define GVE_NODE_H
 
 #include <config.h>
 #include <core/enums.h>
@@ -70,3 +73,5 @@ struct Node : std::enable_shared_from_this<Node>{
 
     ~Node();
 };
+
+#endif

@@ -1,6 +1,10 @@
-#pragma once
+// #pragma once
+
+#ifndef GVE_STRUCT_LOADER_H
+#define GVE_STRUCT_LOADER_H
 
 #include <structs/aabb.h>
+#include <structs/label.h>
 
 namespace factory{
     extern unordered_map<StructId, function<shared_ptr<Node>()>> creators;
@@ -68,3 +72,5 @@ shared_ptr<Node> constructFromStream(fstream &stream);
 #define fstreamWriteV2f fstreamWriteV2<float>
 #define fstreamWriteV2i fstreamWriteV2<int>
 #define fstreamWriteV2u fstreamWriteV2<unsigned int>
+
+#endif
