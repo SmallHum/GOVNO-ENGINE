@@ -60,6 +60,9 @@ namespace assets{
 
     void init(){
         loadPack("main");
+        // setlocale(LC_ALL, "Rus");
+        SetConsoleCP(1251);
+        SetConsoleOutputCP(1251);
     }
 
     void loadPack(string pack_name){

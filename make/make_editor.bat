@@ -18,7 +18,7 @@ set "sfml_link=-L../SFML/lib -DSFML_STATIC -lsfml-system -lsfml-window -lsfml-gr
 
 set "link=-static-libstdc++ -static-libgcc -lpthread -lopengl32 %sfml_link%"
 
-%compiler% -std=c++17 -c %compile% %includes% -O2 -Wno-narrowing
+%compiler% -std=c++17 -fexec-charset=cp1251 -c %compile% %includes% -O2 -Wno-narrowing
 %compiler% -std=c++17 -o "%build%/%app_name%" %obj% -static %link%
 cd %build%
 strip "%app_name%".exe

@@ -19,14 +19,13 @@ struct GVEFont : std::enable_shared_from_this<GVEFont>{
         char_size.y = atlas.getSize().y/16;
 
         for(int i = 0; i < 256; i++){
-            sf::Sprite *result = new sf::Sprite(atlas);
+            letters[i] = new sf::Sprite(atlas);
             v2i pos = {
-                i%16,
-                i/16
+                (i%16)*char_size.x,
+                (i/16)*char_size.y
             };
-            result->setTextureRect(sf::IntRect(pos, char_size));
-            result->move(v2f(-pos));
-            letters[i] = result;
+            letters[i]->setTextureRect(sf::IntRect(pos, char_size));
+            // letters[i]->move(-v2f(pos));
         }
     }
 

@@ -627,10 +627,6 @@ void init(){
     if(!imgui_init_complete){
         cout << "Note: couldn't init ImGUI in SFML window for some reason.\n";
     }
-
-    #ifdef NAYOBKA_ALYO
-        cout << "BLYAT VSMISHLE\n";
-    #endif
 }
 
 void exit(){
@@ -639,6 +635,22 @@ void exit(){
 
 int main(){
     init();
+
+    GVEFont font1(getTexture("main:default_font"));
+    GVEFont font2(getTexture("main:second_font"));
+    string test_text_1 = "TEST FONT 1 ТЕСТ ПЕРВОГО ШРИФТА";
+    string test_text_2 = "TEST FONT 2 ТЕСТ ВТОРОГО ШРИФТА";
+    // string test_text_2 = "десятьбукв";
+
+    cout << test_text_2.c_str() << '\n';
+
+    for(auto &i : test_text_2){
+        cout << (int)i << '\n';
+    }
+
+    for(int i = 0; i <= 255; i++){
+        cout << (unsigned char)i << "   " << i << '\n';
+    }
 
     sf::Clock dt_clock;
     sf::Time dt_time;
@@ -673,6 +685,17 @@ int main(){
 
         viewport::cam_pos = editor::cam_pos;
         //render
+
+        int j = 0;
+        for(auto &i : test_text_1){
+            viewport::draw(font1.getGlyph(i),0,0,3, mat3().translate({j * font1.char_size.x, 0.f}));
+            j++;
+        }
+        j = 0;
+        for(auto &i : test_text_2){
+            viewport::draw(font2.getGlyph(i),0,0,3, mat3().translate({j * font2.char_size.x, 64.f}));
+            j++;
+        }
 
         // cout << "node processing...\n";
         editor::node_root->process();

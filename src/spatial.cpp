@@ -1,7 +1,3 @@
-#ifdef GVE_VIEWPORT_H
-    #define NAYOBKA_ALYO
-#endif
-
 #include <structs/spatial.h>
 #include <core/viewport.h>
 #include <struct_loader.h>

@@ -20,22 +20,19 @@ Good luck figuring out anything in my software.
 ## Real things
 
 ### Struct Label
-
-[] test struct GVEFont
-[] finish label.cpp
-[] test srtuct Label
-
-## Planned structs
-
+  
+[] test struct GVEFont  
+[] finish label.cpp  
+[] test srtuct Label  
+  
+## Planned structs:
+  
 ### CollObj
-
-Family of structs made for collision resolution.
-
-struct CollObj - object that can handle collision detection and resolution
-    ├ struct CollAABB - collision box
-    │
-    └ struct KinemObj - can also move (has vel, accel etc.)
-        └ struct RigidBody - lol what hell nah impossible
-
-
-        АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ
+  
+Family of structs made for collision resolution.  
+  
+struct CollObj - object that can handle collision detection and resolution  
+    ├ struct CollAABB - collision box  
+    │  
+    └ struct KinemObj - can also move (has vel, accel etc.)  
+        └ struct RigidBody - lol what hell nah impossible  
