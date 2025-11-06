@@ -4,6 +4,7 @@
 #define GVE_ASSETS_H
 
 #include <config.h>
+#include <structs/font.h>
 
 struct Pack{
     map<string,sf::Texture> textures;
@@ -11,7 +12,7 @@ struct Pack{
     map<string,sf::Music> music;
     map<string,sf::SoundBuffer> sound_buffers;
     map<string,sf::Sound> sfx;
-    // map<string,sf::Font> fonts;
+    map<string,GVEFont> fonts;
 
     // Loads independent asset map, from file
     template <typename T>
@@ -19,7 +20,7 @@ struct Pack{
 
     // Loads a dependent asset map, from another asset map
     template <typename T, typename Dependency>
-    void loadAsset(map<string, T> &assets_list, map<string,Dependency> &d_map);
+    void loadAsset(map<string, T> &assets_list, map<string,Dependency> &d_map, const string prefix_filter = "");
 
 };
 
@@ -35,7 +36,9 @@ namespace assets{
     sf::Texture &getT(const string name);
     sf::Music &getM(const string name);
     sf::Sound &getSf(const string name);
-    // sf::Font &getF(const string name);
+    GVEFont &getF(const string name);
+
+    string getFontName(GVEFont &font);
 
     void printData();
 };
@@ -44,6 +47,6 @@ namespace assets{
 #define getTexture assets::getT
 #define getMusic assets::getM
 #define getSfx assets::getSf
-// #define getFont assets::getF
+#define getFont assets::getF
 
 #endif

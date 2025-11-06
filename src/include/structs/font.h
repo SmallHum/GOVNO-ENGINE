@@ -5,6 +5,11 @@
 
 #include <config.h>
 
+namespace assets{
+    sf::Texture &getT(const string name);
+};
+#define getTexture assets::getT
+
 // All the fonts are unfortunately monospace
 // Fonts must be made from images with 16x16 character layout.
 struct GVEFont : std::enable_shared_from_this<GVEFont>{
@@ -12,14 +17,11 @@ struct GVEFont : std::enable_shared_from_this<GVEFont>{
     v2i char_size;
     sf::Texture &atlas;
 
-    sf::Sprite *letters[256] = {nullptr};
+    shared_ptr<sf::Sprite> letters[256];
 
-    GVEFont(sf::Texture &atlas): atlas(atlas){
-        char_size.x = atlas.getSize().x/16;
-        char_size.y = atlas.getSize().y/16;
-
+    void updateLetters(){
         for(int i = 0; i < 256; i++){
-            letters[i] = new sf::Sprite(atlas);
+            letters[i] = make_shared<sf::Sprite>(atlas);
             v2i pos = {
                 (i%16)*char_size.x,
                 (i/16)*char_size.y
@@ -29,14 +31,33 @@ struct GVEFont : std::enable_shared_from_this<GVEFont>{
         }
     }
 
-    sf::Sprite *getGlyph(unsigned char a){
-        return letters[a];
+    GVEFont(sf::Texture &atlas):
+        atlas(atlas){
+
+        char_size.x = atlas.getSize().x/16;
+        char_size.y = atlas.getSize().y/16;
+
+        updateLetters();
     }
 
-    ~GVEFont(){
-        for(auto i : letters)
-            delete i;
+    sf::Sprite *getGlyph(unsigned char a){
+        // cout << letters[a] << '\n';
+        return letters[a].get();
+    }
+
+    GVEFont operator = (const GVEFont &other){
+        atlas = other.atlas;
+        char_size = other.char_size;
+        updateLetters();
+
+        return *this;
     }
 };
+
+namespace assets{
+    GVEFont &getF(const string name);
+    string getFontName(GVEFont &font);
+};
+#define getFont assets::getF
 
 #endif

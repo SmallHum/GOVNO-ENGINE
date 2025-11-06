@@ -24,6 +24,7 @@ namespace factory{
         "Node",
         "Spatial",
         "AABB",
+        "Label",
         "Sprite"
     };
 };

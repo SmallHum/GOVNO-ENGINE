@@ -9,6 +9,18 @@
 #include <imgui/imgui_stdlib.h>
 #include <imgui/imgui-SFML.h>
 
+#define CTRL_DOWN (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || \
+        ImGui::IsKeyDown(ImGuiKey_RightCtrl))
+
+#define SHIFT_DOWN (ImGui::IsKeyDown(ImGuiKey_LeftShift) || \
+        ImGui::IsKeyDown(ImGuiKey_RightShift))
+
+#define PRESSED(K) ImGui::IsKeyPressed(K)
+#define DOWN(K) ImGui::IsKeyDown(K)
+
+#define SHIFT(K) (SHIFT_DOWN && PRESSED(K))
+#define CTRL(K) (CTRL_DOWN && PRESSED(K))
+
 namespace node_gen{
 
     shared_ptr<Node> randomType(){
@@ -139,7 +151,7 @@ namespace editor{
 
         void selectionProcess(weak_ptr<TreeNode> &active_selection, vector<weak_ptr<TreeNode>> &multiple_selection){
 
-            if(ImGui::IsKeyDown(ImGuiKey_LeftShift)){
+            if(SHIFT_DOWN){
                 // cout << "SHIFT SELECTION...\n";
                 if(is_multiple_selection && is_active_selection){
                     // cout << "MULTIPLE AND ACTIVE\n";
@@ -378,7 +390,7 @@ namespace editor{
         if(!ImGui::InputFloat(label.c_str(), &buffer))
             return;
 
-        if(!ImGui::IsKeyPressed(ImGuiKey_Enter))
+        if(!PRESSED(ImGuiKey_Enter))
             return;
 
         cout << "    applying " << label << '\n';
@@ -390,7 +402,7 @@ namespace editor{
 
         if(!ImGui::InputFloat2(label.c_str(), buffer))
             return;
-        if(!ImGui::IsKeyPressed(ImGuiKey_Enter))
+        if(!PRESSED(ImGuiKey_Enter))
             return;
 
         cout << "    applying " << label << '\n';
@@ -398,17 +410,30 @@ namespace editor{
         v.y = buffer[1];
     }
 
-    void editFieldString(string label, string &v){
+    void editFieldString(string label, string &v, bool multiline = 0){
         string buffer = v;
 
-        if(!ImGui::InputText("Name", &buffer))
-            return;
-        if(!ImGui::IsKeyPressed(ImGuiKey_Enter))
-            return;
+        if(multiline){
+            if(!ImGui::InputTextMultiline(label.c_str(), &buffer))
+                return;
+        }
+        else{
+            if(!ImGui::InputText(label.c_str(), &buffer))
+                return;
+        }
+        if(!PRESSED(ImGuiKey_Enter))
+                return;
+        
 
         cout << "    applying " << label << '\n';
         v.resize(strlen(buffer.c_str()));
         v = buffer;
+    }
+
+    void LabelEditMenu(Label *node){
+        ImGui::SeparatorText("Label");
+
+        editFieldString("Text", node->text, true);
     }
 
     void AABBEditMenu(AABB *node){
@@ -429,6 +454,9 @@ namespace editor{
 
         auto aabb = dynamic_cast<AABB*>(node);
         if(aabb)AABBEditMenu(aabb);
+
+        auto label = dynamic_cast<Label*>(node);
+        if(label)LabelEditMenu(label);
     }
 
     void nodeEditMenu(Node *node){
@@ -471,36 +499,20 @@ namespace editor{
         }
 
         // Keyboard actions.
-        if(ImGui::IsKeyPressed(ImGuiKey_Delete))selAction(deleteNode);
+        if(PRESSED(ImGuiKey_Delete))selAction(deleteNode);
 
-        if(ImGui::IsKeyPressed(ImGuiKey_N) && 
-        (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) ||
-        ImGui::IsKeyDown(ImGuiKey_RightCtrl))
-        )ImGui::OpenPopup("Make Node");
-
-        if(ImGui::IsKeyPressed(ImGuiKey_C) && 
-        (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) ||
-        ImGui::IsKeyDown(ImGuiKey_RightCtrl))
-        )copy();
-
-        if(ImGui::IsKeyPressed(ImGuiKey_S) && 
-        (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) ||
-        ImGui::IsKeyDown(ImGuiKey_RightCtrl))
-        )save();
-
-        if(ImGui::IsKeyPressed(ImGuiKey_V) && 
-        (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) ||
-        ImGui::IsKeyDown(ImGuiKey_RightCtrl))
-        )paste();
-
-        if(ImGui::IsKeyPressed(ImGuiKey_O) && 
-        (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) ||
-        ImGui::IsKeyDown(ImGuiKey_RightCtrl))
-        )open();
-
-        if(ImGui::IsKeyPressed(ImGuiKey_F) &&
-            (ImGui::IsKeyDown(ImGuiKey_LeftShift) || 
-            ImGui::IsKeyDown(ImGuiKey_RightShift)))controlling_camera = 1;
+        if(CTRL(ImGuiKey_N))
+            ImGui::OpenPopup("Make Node");
+        if(CTRL(ImGuiKey_C))
+            copy();
+        if(CTRL(ImGuiKey_S))
+            save();
+        if(CTRL(ImGuiKey_V))
+            paste();
+        if(CTRL(ImGuiKey_O))
+            open();
+        if(SHIFT(ImGuiKey_F))
+            controlling_camera = 1;
 
         float height = viewport::wind.getSize().y-bar_height_button_size;
 
@@ -589,15 +601,15 @@ namespace editor{
 
         if(controlling_camera){
             cam_pos += 600.f * dt * v2f(getDirHeld());
-            if(ImGui::IsKeyPressed(ImGuiKey_Escape))
+            if(PRESSED(ImGuiKey_Escape))
                 controlling_camera = 0;
         }
         else if(auto s = active_selection.lock()){
             auto p = dynamic_cast<Spatial*>(s->ref.lock().get());
             if(p){
                 p->pos += 150.f * dt * v2f(getDirHeld());
-                if(ImGui::IsKeyDown(ImGuiKey_Q))p->angle += 50.f * dt;
-                if(ImGui::IsKeyDown(ImGuiKey_W))p->angle -= 50.f * dt;
+                if(PRESSED(ImGuiKey_Q))p->angle += 50.f * dt;
+                if(PRESSED(ImGuiKey_W))p->angle -= 50.f * dt;
             }
 
             // auto aabb = dynamic_cast<AABB*>(s->ref.lock().get());
@@ -636,22 +648,6 @@ void exit(){
 int main(){
     init();
 
-    GVEFont font1(getTexture("main:default_font"));
-    GVEFont font2(getTexture("main:second_font"));
-    string test_text_1 = "TEST FONT 1 ТЕСТ ПЕРВОГО ШРИФТА";
-    string test_text_2 = "TEST FONT 2 ТЕСТ ВТОРОГО ШРИФТА";
-    // string test_text_2 = "десятьбукв";
-
-    cout << test_text_2.c_str() << '\n';
-
-    for(auto &i : test_text_2){
-        cout << (int)i << '\n';
-    }
-
-    for(int i = 0; i <= 255; i++){
-        cout << (unsigned char)i << "   " << i << '\n';
-    }
-
     sf::Clock dt_clock;
     sf::Time dt_time;
     float dt = 1.f/60.f;
@@ -668,6 +664,8 @@ int main(){
     style.ChildRounding = 3.f;
     style.FrameRounding = 3.f;
     style.WindowRounding = 3.f;
+
+    // cout << "loop begins...\n";
 
     //main loop
     while(viewport::wind.isOpen()){
@@ -686,17 +684,6 @@ int main(){
         viewport::cam_pos = editor::cam_pos;
         //render
 
-        int j = 0;
-        for(auto &i : test_text_1){
-            viewport::draw(font1.getGlyph(i),0,0,3, mat3().translate({j * font1.char_size.x, 0.f}));
-            j++;
-        }
-        j = 0;
-        for(auto &i : test_text_2){
-            viewport::draw(font2.getGlyph(i),0,0,3, mat3().translate({j * font2.char_size.x, 64.f}));
-            j++;
-        }
-
         // cout << "node processing...\n";
         editor::node_root->process();
         // cout << "node drawing...\n";
@@ -704,6 +691,7 @@ int main(){
         // cout << "node debug drawing...\n";
         editor::node_root->drawDebug();
         // cout << "displaying...\n";
+        // cout << viewport::draw_queue.size();
         viewport::display(dt);
 
         ImGui::SFML::Update(viewport::wind, dt_time);
@@ -711,6 +699,7 @@ int main(){
         // cout << "pushing font\n";
         ImGui::PushFont(def);
         // cout << "pushed font\n";
+        // cout << "trying processing editor...\n";
         editor::process(dt);
         ImGui::PopFont();
         ImGui::SFML::Render(viewport::wind);

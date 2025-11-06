@@ -7,9 +7,9 @@ set "src=..\src"
 set "build=..\build"
 set "includes=-I..\SFML\include -I..\src\include"
 
-set "compile=%src%\main.cpp %src%\viewport.cpp %src%\assets.cpp %src%\struct_loader.cpp %src%\aabb.cpp %src%\spatial.cpp %src%\node.cpp %src%\controls.cpp"
+set "compile=%src%\main.cpp %src%\viewport.cpp %src%\assets.cpp %src%\struct_loader.cpp %src%\label.cpp %src%\aabb.cpp %src%\spatial.cpp %src%\node.cpp %src%\controls.cpp"
 
-set "myobj=main.o viewport.o assets.o struct_loader.o aabb.o spatial.o node.o controls.o"
+set "myobj=main.o viewport.o assets.o struct_loader.o label.o aabb.o spatial.o node.o controls.o"
 
 set "obj=%myobj%"
 

@@ -35,12 +35,22 @@ void Pack::loadAsset(
 template <typename T, typename Dependency>
 void Pack::loadAsset(
         map<string, T> &assets_list, 
-        map<string,Dependency> &d_map
+        map<string,Dependency> &d_map,
+        const string prefix_filter
 ){
     for(auto &i : d_map){
         // assets_list.insert(
         //     pair<const string, Dependency>(i.first, T(i.second))
         // );
+        if(i.first.size() < prefix_filter.size())continue;
+
+        bool not_prefix = 0;
+        for(size_t c = 0; c < prefix_filter.size(); c++){
+            not_prefix = not_prefix || i.first[c] != prefix_filter[c];
+        }
+
+        if(not_prefix)continue;
+
         assets_list.insert_or_assign(i.first, T(i.second));
     }
 }
@@ -76,13 +86,15 @@ namespace assets{
 
         auto &pack = packs[pack_name];
 
-        pack.loadAsset(pack.textures,sprites_path);
-        pack.loadAsset(pack.sprites,pack.textures);
+        pack.loadAsset(pack.textures, sprites_path);
+        pack.loadAsset(pack.sprites, pack.textures);
 
         pack.loadAsset(pack.music, music_path);
 
         pack.loadAsset(pack.sound_buffers, sfx_path);
         pack.loadAsset(pack.sfx, pack.sound_buffers);
+
+        pack.loadAsset(pack.fonts, pack.textures, "font_");
 
         // pack.loadAsset<sf::Font>(pack.fonts,font_path);
         printData();
@@ -107,9 +119,9 @@ namespace assets{
             for(auto &j : i.second.sfx)
                 cout << "    " << j.first << '\n';
 
-            // cout << "  Fonts:\n";
-            // for(auto &j : i.second.fonts)
-            //     cout << "    " << j.first << '\n';
+            cout << "  Fonts:\n";
+            for(auto &j : i.second.fonts)
+                cout << "    " << j.first << '\n';
         }
         cout << '\n';
     }
@@ -141,6 +153,25 @@ namespace assets{
                 asset = name.substr(colon_index+1,name.length()-colon_index-1);
 
         return find(packs[pack].sfx, asset);
+    }
+    GVEFont &getF(const string name){
+        size_t colon_index = name.find_first_of(':');
+        string pack = name.substr(0,colon_index),
+                asset = name.substr(colon_index+1,name.length()-colon_index-1);
+
+        return find(packs[pack].fonts, asset);
+    }
+
+    string getFontName(GVEFont &font){
+        for(auto &i : packs){
+            for(auto &j : i.second.fonts){
+                // cout << &j.second.atlas << ' ' << &font.atlas;
+                if(&j.second.atlas != &font.atlas)continue;
+                return i.first + ":" + j.first;
+            }
+        }
+
+        return "";
     }
 
     // i think we dont need it anymore

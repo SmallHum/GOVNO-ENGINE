@@ -104,19 +104,31 @@ namespace viewport{
     }
 
     void display(float dt){
+        // cout << "entered display func...\n";
+        // cout << "clearing bg...\n";
         wind.clear(bg_color);
+        // cout << "showing fps...\n";
         if(debug::show_fps){
             debug::fps_text.setString(std::to_string(1.0/dt));
             drawOver(&debug::fps_text, 0, 1);
         }
+        // cout << "queue processing started...\n";
         while(!draw_queue.empty()){
             DrawInfo curr = draw_queue.top();
+            // cout << "trying to draw...  " << curr.d << '\n';
             mat3 transform = curr.transform;
+            // cout << "trying to apply cam transform..." << '\n';
             if(!curr.follow_cam)
                 transform = mat3().translate(-cam_pos).combine(transform);
+            // cout << "trying to draw like for real..." << '\n';
+            sf::Sprite *spr = dynamic_cast<sf::Sprite*>(curr.d);
+            // cout << spr;
             wind.draw(*curr.d, sf::RenderStates(transform));
+            // cout << "trying to free..." << '\n';
             curr.freeD();
+            // cout << "trying to pop..." << '\n';
             draw_queue.pop();
+            // cout << "successful i guess." << '\n';
         }
     }
 
