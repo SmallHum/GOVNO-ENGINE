@@ -9,6 +9,6 @@ All you need to do:
 - make sure that compiler folder is included in PATH
 - ```make/make_imgui.bat```, to make the imgui objects
 - ```make/make_editor.bat```, if you want to run the editor
-- ```make/make_editor.bat```, if you want to run the resulting app.
+- ```make/make_app.bat```, if you want to run the resulting app.
 
 Good luck figuring out anything in my software.
