@@ -21,6 +21,9 @@
 #define SHIFT(K) (SHIFT_DOWN && PRESSED(K))
 #define CTRL(K) (CTRL_DOWN && PRESSED(K))
 
+#define SHIFT_AND(COND) (SHIFT_DOWN && (COND))
+#define CTRL_AND(COND) (CTRL_DOWN && (COND))
+
 namespace node_gen{
 
     shared_ptr<Node> randomType(){
@@ -58,326 +61,31 @@ namespace node_gen{
 
 namespace editor{
 
-    int id_fix;
-    bool any_editor_window_focused = 0,
-        controlling_camera = 0;
-
-    v2f cam_pos = {-480.f, -360.f};
-
-    float tree_view_width = 240,
-        actions_width = 160,
-        bar_height_button_size = 26,
-        edit_width = 240,
-        edit_pos_x;
-
-    struct TreeNode : std::enable_shared_from_this<TreeNode>{
-        weak_ptr<Node> ref;
-
-        weak_ptr<TreeNode> parent;
-        size_t parent_index = -1;
-
-        bool collapsed = 1;
-        bool is_active_selection = 0;
-        bool is_multiple_selection = 0;
-        size_t mult_sel_index = -1;
-
-        vector<shared_ptr<TreeNode>> children;
-
-        TreeNode(){}
-
-        void fill(weak_ptr<Node> ref){
-            children.clear();
-            this->ref = ref;
-            for(auto &i : ref.lock()->children){
-                cout << "pushing child...\n";
-                children.push_back(make_shared<TreeNode>());
-                cout << "making shared from this...\n";
-                children.back()->fill(i);
-                children.back()->parent = shared_from_this();
-                cout << "giving it a parent index...\n";
-                children.back()->parent_index = children.size()-1;
-            }
-        }
-
-        void update(){
-            fill(ref);
-        }
-
-        void show(){
-            collapsed = 0;
-            if(auto p = parent.lock())
-                p->show();
-        }
-
-        void activeSelect(weak_ptr<TreeNode> &active_selection){
-            if(auto a = active_selection.lock())
-                a->is_active_selection = 0;
-            active_selection = shared_from_this();
-            is_active_selection = 1;
-        }
-
-        void activeUnselect(weak_ptr<TreeNode> &active_selection){
-            active_selection.reset();
-            is_active_selection = 0;
-        }
-
-        void multipleSelect(vector<weak_ptr<TreeNode>> &multiple_selection){
-            mult_sel_index = multiple_selection.size();
-            multiple_selection.push_back(shared_from_this());
-            is_multiple_selection = 1;
-        }
-
-        void multipleUnselect(vector<weak_ptr<TreeNode>> &multiple_selection){
-            multiple_selection.erase(
-                multiple_selection.begin() + mult_sel_index
-            );
-            for(size_t i = mult_sel_index; i < multiple_selection.size(); i++)
-                if(auto p = multiple_selection[i].lock())
-                    multiple_selection[i].lock()->mult_sel_index--;
-            is_multiple_selection = 0;
-            mult_sel_index = -1;
-        }
-
-        void multipleUnselectAll(vector<weak_ptr<TreeNode>> &multiple_selection){
-            for(auto &i : multiple_selection){
-                auto p = i.lock();
-                // cout << "NAME: " << p->ref.lock()->name << '\n';
-                // cout << "MULT SEL INDEX: " << p->mult_sel_index << '\n';
-                p->is_multiple_selection = 0;
-                p->mult_sel_index = -1;
-            }
-            multiple_selection.clear();
-        }
-
-        void selectionProcess(weak_ptr<TreeNode> &active_selection, vector<weak_ptr<TreeNode>> &multiple_selection){
-
-            if(SHIFT_DOWN){
-                // cout << "SHIFT SELECTION...\n";
-                if(is_multiple_selection && is_active_selection){
-                    // cout << "MULTIPLE AND ACTIVE\n";
-                    multipleUnselect(multiple_selection);
-                    activeUnselect(active_selection);
-                }
-                else if (is_multiple_selection && !is_active_selection){
-                    // cout << "MULTIPLE BUT NOT ACTIVE\n";
-                    activeSelect(active_selection);
-                }
-                else if (!is_multiple_selection && is_active_selection){
-                    // cout << "ACTIVE BUT NOT MULTIPLE\n";
-                    multipleSelect(multiple_selection);
-                }
-                else{
-                    // cout << "NIETHER ACTIVE NOR MULTIPLE\n";
-                    activeSelect(active_selection);
-                    multipleSelect(multiple_selection);
-                }
-            }
-            else {
-                // cout << "NON SHIFT SELECTION WORKED\n";
-                multipleUnselectAll(multiple_selection);
-                multipleSelect(multiple_selection);
-                activeSelect(active_selection);
-            }
-        }
-
-        void drawCol1(weak_ptr<TreeNode> &active_selection, vector<weak_ptr<TreeNode>> &multiple_selection, float depth = 0){
-            if(!ref.lock())
-                return;
-
-            ImGui::PushID(id_fix++);
-
-            Node *n = ref.lock().get();
-
-            ImGui::SetCursorPosX(depth*16.f + ImGui::GetCursorPosX());
-
-            const char *button_icon = collapsed ? ">" : "v";
-
-            if(is_active_selection){
-                ImGui::PushStyleColor(ImGuiCol_ChildBg, {0.2f, 0.3f, 0.5f, 1.0f});
-            }
-            else if(is_multiple_selection){
-                ImGui::PushStyleColor(ImGuiCol_ChildBg, {0.2f/2.f, 0.3f/2.f, 0.5f/2.f, 1.0f});
-            }
-            else{
-                ImGui::PushStyleColor(ImGuiCol_ChildBg, {0.f, 0.f, 0.f, 1.f});
-            }
-            ImGui::BeginChild("MyBox", {200, 26}, ImGuiChildFlags_AlwaysAutoResize | ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY);
-
-            if(!children.empty()){
-                if(ImGui::Button(button_icon,{26,26})){
-                    collapsed = !collapsed;
-                    selectionProcess(active_selection, multiple_selection);
-                }
-            }
-            else{
-                ImGui::InvisibleButton(".",{26,26});
-            }
-            ImGui::SameLine();
-
-            ImGui::Text(n->name.c_str());
-            if(ImGui::IsItemClicked()){
-                selectionProcess(active_selection, multiple_selection);
-            }
-
-            ImGui::EndChild();
-            ImGui::PopStyleColor();
-
-            ImGui::PopID();
-
-            if(!collapsed)
-                for(auto &i : children)
-                    i->drawCol1(active_selection, multiple_selection, depth+1);
-        }
-
-        void drawCol2(){
-            if(!ref.lock())
-                return;
-
-            Node *n = ref.lock().get();
-            // cout << parent << ' ' << n->name << '\n';
-
-            ImGui::PushID(id_fix++);
-            ImGui::Checkbox("visible",&n->visible);
-
-            ImGui::PopID();
-
-            if(!collapsed)
-                for(auto &i : children)
-                    i->drawCol2();
-        }
-
-        void del(){
-            if(auto r = ref.lock()){
-                if(auto p = r->parent.lock())
-                    p->removeChild(r);
-            }
-
-            if(auto p = parent.lock()){
-                auto this_iter = p->children.begin()+parent_index;
-                for(auto i = this_iter+1; i != p->children.end(); i++){
-                    (*i)->parent_index--;
-                }
-                p->children.erase(this_iter);
-            }
-        }
-
-        void add(function<shared_ptr<Node>()> &creator){
-            shared_ptr<Node> new_child = creator();
-            ref.lock()->addChild(new_child);
-            
-            children.push_back(make_shared<TreeNode>());
-            children.back()->fill(new_child);
-            children.back()->parent = shared_from_this();
-            children.back()->parent_index = children.size()-1;
-
-            show();
-        }
-    };
-
-    // Trying to implement undo/redo
-
-    // typedef int data_t;
-
-    // struct Action{
-    //     Action(){execute();}
-    //     virtual void execute();
-    //     virtual void undo();
-    // };
-
-    // struct Paste: Action{
-    //     data_t clipboard;
-    //     vector<data_t>& data;
-    //     vector<data_t>::iterator index;
-
-    //     Paste(data_t clipboard, vector<data_t> &data, size_t index): 
-    //     clipboard(clipboard),
-    //     data(data),
-    //     index(data.begin() + index){
-    //         execute();
-    //     }
-    //     void execute() override{
-    //         data.insert(index, clipboard);
-    //     }
-    //     void undo() override{
-    //         data.erase(index);
-    //     }
-    // };
-
-    // vector<shared_ptr<Action>> history;
-
-    //////////////
-
-    vector<weak_ptr<TreeNode>> to_remove;
-
-    weak_ptr<TreeNode> active_selection;
-    vector<weak_ptr<TreeNode>> multiple_selection;
-
-    shared_ptr<TreeNode> tree_root;
     shared_ptr<Node> node_root;
-
-    shared_ptr<Node> node_clipboard;
-
-    //temporary
-    // shared_ptr<Node> other;
+    weak_ptr<Node> selection;
 
     void init(){
         node_root = make_shared<Node>("root");
-        node_gen::genTree(node_root, 2);
+        node_gen::genTree(node_root, 3);
 
         // other = make_shared<AABB>();
         // node_root->addChild(other);
 
         node_root->printTree();
-
-        editor::tree_root = make_shared<editor::TreeNode>();
-        editor::tree_root->fill(node_root);
     }
-
-    function<void()> nothing = [](){};
-
-    void selAction(function<void()> &action, function<void()> &counter_action = nothing){
-        if(auto s = active_selection.lock())action();
-        else counter_action();
-    }
-
-    void newNode(function<shared_ptr<Node>()> &creator){
-        if(auto s = active_selection.lock())active_selection.lock()->add(creator);
-        else tree_root->add(creator);
-    }
-
-    function<void()> deleteNode = [](){
-        to_remove = multiple_selection;
-    };
 
     void open(){
-        if(!node_root)return;
-
-        active_selection.reset();
-        multiple_selection.clear();
-
+        if(!node_root){
+            cout << "HOW DID YOU DELETE NODE ROOT LMAO\n"; return;
+        }
         node_root = constructFromFile("saved.ntr");
-        tree_root->fill(node_root);
     }
 
     void save(){
-        if(!node_root)return;
-        node_root->writeToFile("saved.ntr");
-    }
-
-    void copy(){
-        auto s = active_selection.lock()->ref;
-        if(s.expired())return;
-        node_clipboard = factory::copy(s);
-    }
-
-    void paste(){
-        if(auto n = active_selection.lock()->ref.lock()){
-            n->addChild(factory::copy(node_clipboard));
-            active_selection.lock()->update();
-            active_selection.lock()->show();
-            active_selection.lock()->children.back()->multipleUnselectAll(multiple_selection);
-            active_selection.lock()->children.back()->activeSelect(active_selection);
+        if(!node_root){
+            cout << "HOW DID YOU DELETE NODE ROOT LMAO\n"; return;
         }
+        node_root->writeToFile("saved.ntr");
     }
 
     void editFieldBool(string label, bool &v){
@@ -469,8 +177,52 @@ namespace editor{
         if(s)spatialEditMenu(s);
     }
 
+    int id_fix = 0;
+    int sel_margin = 20;
+
+    bool any_editor_window_focused = 0,
+        controlling_camera = 0;
+
+    v2f cam_pos = {-480.f, -360.f};
+
+    float tree_view_width = 240,
+        actions_width = 160,
+        bar_height_button_size = 26,
+        edit_width = 240,
+        edit_pos_x;
+
+    float wheel_delta_x, wheel_delta_y;
+
+    shared_ptr<Node> getHovered(shared_ptr<Node> root, weak_ptr<Node> avoid){
+        if(root == avoid.lock())return shared_ptr<Node>();
+
+        Spatial *sp = dynamic_cast<Spatial *>(root.get());
+
+        if(sp){
+            auto m = ImGui::GetMousePos();
+            if((v2f(m.x,m.y) - sp->getGlobalPos() + cam_pos).length() <= sel_margin){
+                return root;
+            }
+        }
+
+        for(auto &i : root->children){
+            auto result = getHovered(i, avoid);
+            if(result)return result;
+        }
+
+        return shared_ptr<Node>();
+    }
+
     void process(float &dt){
+
+        // if(ImGui::IsMouseClicked(ImGuiMouseButton_Left)){
+        //     selection = getHovered(node_root, selection);
+        //     cout << selection.lock()->name << '\n';
+        // }
+
         id_fix = 0;
+
+        wheel_delta_x = wheel_delta_y = 0.f;
 
         // Menu bar.
         // TODO: 
@@ -486,10 +238,10 @@ namespace editor{
 
             if(ImGui::BeginMenu("Edit")){
                 if(ImGui::MenuItem("New Node", "Ctrl+N"))ImGui::OpenPopup("Make Node");
-                if(ImGui::MenuItem("Delete Node", "Del"))selAction(deleteNode);
+                if(ImGui::MenuItem("Delete Node", "Del")){}
                 ImGui::Separator();
-                if(ImGui::MenuItem("Copy", "Ctrl+C"))copy();
-                if(ImGui::MenuItem("Paste", "Ctrl+V"))paste();
+                if(ImGui::MenuItem("Copy", "Ctrl+C")){}
+                if(ImGui::MenuItem("Paste", "Ctrl+V")){}
                 ImGui::Separator();
                 if(ImGui::MenuItem("Move Camera", "Shift+F"))controlling_camera = 1;
                 ImGui::EndMenu();
@@ -499,20 +251,19 @@ namespace editor{
         }
 
         // Keyboard actions.
-        if(PRESSED(ImGuiKey_Delete))selAction(deleteNode);
-
+        if(PRESSED(ImGuiKey_Delete)){}
         if(CTRL(ImGuiKey_N))
             ImGui::OpenPopup("Make Node");
-        if(CTRL(ImGuiKey_C))
-            copy();
+        if(CTRL(ImGuiKey_C)){}
         if(CTRL(ImGuiKey_S))
             save();
-        if(CTRL(ImGuiKey_V))
-            paste();
+        if(CTRL(ImGuiKey_V)){}
         if(CTRL(ImGuiKey_O))
             open();
         if(SHIFT(ImGuiKey_F))
             controlling_camera = 1;
+        if(CTRL(ImGuiKey_Z)){}
+        if(CTRL(ImGuiKey_Y)){}
 
         float height = viewport::wind.getSize().y-bar_height_button_size;
 
@@ -530,12 +281,12 @@ namespace editor{
 
         tree_view_width = ImGui::GetWindowSize().x;
 
-        ImGui::Columns(2);
+        // ImGui::Columns(2);
         
-        tree_root->drawCol1(active_selection, multiple_selection);
-        ImGui::NextColumn();
+        // tree_root->drawCol1(active_selection, multiple_selection);
+        // ImGui::NextColumn();
         
-        tree_root->drawCol2();
+        // tree_root->drawCol2();
 
         ImGui::End();
 
@@ -554,9 +305,8 @@ namespace editor{
             | ImGuiWindowFlags_NoScrollWithMouse);
 
 
-        if(auto sel = active_selection.lock())
-            if(auto s = sel->ref.lock())
-                nodeEditMenu(s.get());
+        if(auto s = selection.lock())
+            nodeEditMenu(s.get());
 
         ImGui::End();
 
@@ -566,30 +316,12 @@ namespace editor{
 
             for(auto& i : factory::creators){
                 if(ImGui::Button(factory::names[(size_t)i.first].c_str(),{64,26})){
-                    newNode(i.second);
+                    // newNode(i.second);
                     ImGui::CloseCurrentPopup();
                 }
             }
 
             ImGui::EndPopup();
-        }
-
-        // Deletion process.
-        // Due to crashes, deletion process is moved to the end of the function
-        if(!to_remove.empty()){
-            for(auto &i : to_remove)
-                if(auto t = i.lock()){
-                    t->del();
-                }
-            to_remove.clear();
-            if(!multiple_selection.empty()){
-                if(auto m = multiple_selection.front().lock())
-                    m->multipleUnselectAll(multiple_selection);
-            }
-            if(auto a = active_selection.lock())
-                a->activeUnselect(active_selection);
-            multiple_selection.clear();
-            active_selection.reset();
         }
         
         any_editor_window_focused = ImGui::IsWindowFocused(
@@ -599,13 +331,11 @@ namespace editor{
 
         if(any_editor_window_focused)return;
 
-        if(controlling_camera){
-            cam_pos += 600.f * dt * v2f(getDirHeld());
-            if(PRESSED(ImGuiKey_Escape))
-                controlling_camera = 0;
-        }
-        else if(auto s = active_selection.lock()){
-            auto p = dynamic_cast<Spatial*>(s->ref.lock().get());
+        cam_pos.x += wheel_delta_x * 5.f;
+        cam_pos.y += wheel_delta_y * 5.f;
+
+        if(auto s = selection.lock()){
+            auto p = dynamic_cast<Spatial*>(s.get());
             if(p){
                 p->pos += 150.f * dt * v2f(getDirHeld());
                 if(PRESSED(ImGuiKey_Q))p->angle += 50.f * dt;
@@ -674,6 +404,13 @@ int main(){
             ImGui::SFML::ProcessEvent(viewport::wind,*ev);
             if(ev->is<sf::Event::Closed>()){
                 exit();
+            }
+            if(const auto* e = ev->getIf<sf::Event::MouseWheelScrolled>()){
+                float d = e->delta;
+                if(e->wheel == sf::Mouse::Wheel::Horizontal)
+                    editor::wheel_delta_x = d;
+                if(e->wheel == sf::Mouse::Wheel::Vertical)
+                    editor::wheel_delta_y = d;
             }
         }
         updateControls();

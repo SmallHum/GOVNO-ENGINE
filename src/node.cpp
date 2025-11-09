@@ -39,6 +39,14 @@ void Node::removeChild(size_t index){
     if(index >= children.size())return;
     children[index]->parent.reset();
     children.erase(children.begin() + index);
+
+    for(size_t i = index; i < children.size(); i++)
+        children[i]->parent_index--;
+}
+
+void Node::removeGently(){
+    if(auto p = parent.lock())
+        p->removeChild(parent_index);
 }
 
 shared_ptr<Node> Node::find(string path){

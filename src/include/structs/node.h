@@ -33,6 +33,8 @@ struct Node : std::enable_shared_from_this<Node>{
     void removeChild(shared_ptr<Node> node);
     void removeChild(size_t index);
 
+    void removeGently();
+
     // Struct ID for saving and loading node tree
     virtual StructId getStructId();
 

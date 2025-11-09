@@ -8,8 +8,8 @@ All you need to do:
 - have the gcc 14.2.0+ toolkit installed
 - make sure that compiler folder is included in PATH
 - ```make/make_imgui.bat```, to make the imgui objects
-- ```make/make_editor.bat```, if you want to run the editor
-- ```make/make_editor.bat```, if you want to run the resulting app.
+- ```make/make_editor.bat```, if you want to compile the editor
+- ```make/make_app.bat```, if you want to compile the resulting app.
 
 Good luck figuring out anything in my software.
 
@@ -19,11 +19,16 @@ Good luck figuring out anything in my software.
 
 ## Real things
 
-### Struct Label
-  
-[] test struct GVEFont  
-[] finish label.cpp  
-[] test srtuct Label  
+### Editor
+
+- undo/redo MUST BE DONE ALREADY  
+- refactor it entirely i guess  
+- template fromAssets function that takes an asset map as an argument  
+
+
+### Struct Sprite
+
+animation object as a parameter, which takes an atlas and a vector of boxes, or a size of a single frame
   
 ## Planned structs:
   
