@@ -469,6 +469,7 @@ namespace editor{
 };
 
 void init(){
+    controls::init();
     assets::init();
     cout << "Assets init done.\n";
     viewport::init({960,720});
@@ -521,6 +522,9 @@ int main(){
         //update events
         while(const std::optional ev = viewport::wind.pollEvent()){
             ImGui::SFML::ProcessEvent(viewport::wind,*ev);
+            
+            controls::feedEvent(ev);
+
             if(ev->is<sf::Event::Closed>()){
                 exit();
             }
@@ -532,7 +536,6 @@ int main(){
                     editor::wheel_delta_y = d;
             }
         }
-        updateControls();
 
         //physics
         // viewport::bg_color = editor::any_editor_window_focused ? sf::Color(63,63,0) : sf::Color::Black;

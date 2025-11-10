@@ -1,2 +1,0 @@
-gve-editor.exe
-pause

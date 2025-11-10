@@ -1,41 +1,84 @@
 #include <core/controls.h>
 
 namespace controls{
-    key A_UP = 0,
-        A_DOWN = 1,
-        A_LEFT = 2,
-        A_RIGHT = 3,
+    act
+    A_UP = 0,
+    A_DOWN = 1,
+    A_LEFT = 2,
+    A_RIGHT = 3,
 
-        A_1 = 4,
-        A_2 = 5,
-        A_3 = 6,
-        A_CNSL = 7;
+    A_1 = 4,
+    A_2 = 5,
+    A_3 = 6;
 
-    key acts[] = {VK_UP,VK_DOWN,VK_LEFT,VK_RIGHT,'Z','X','C',VK_F9};
+    act acts[256];
+    sf::Keyboard::Key keys[7];
 
-    bool states[8][3];
+    bool states[7][2];
 
-    void updCtrls(){
-            for(int i = 0; i < 8; i++){
-                states[i][0] = states[i][1];
-                states[i][1] = GetKeyState(acts[i]) & 0x8000;
-                states[i][2] = GetKeyState(acts[i]) & 1;
-            }
-        }
+    void init(
+        sf::Keyboard::Key up,
+        sf::Keyboard::Key down,
+        sf::Keyboard::Key left,
+        sf::Keyboard::Key right,
 
-    bool kHeld(key a){
+        sf::Keyboard::Key a1,
+        sf::Keyboard::Key a2,
+        sf::Keyboard::Key a3
+    ){
+        for(size_t i = 0; i < 7; i++)
+            keys[i] = sf::Keyboard::Key::Unknown;
+
+        for(size_t i = 0; i < 256; i++)
+            acts[i] = -1;
+
+        bind(A_UP, up);
+        bind(A_DOWN, down);
+        bind(A_LEFT, left);
+        bind(A_RIGHT, right);
+
+        bind(A_1, a1);
+        bind(A_2, a2);
+        bind(A_3, a3);
+    }
+
+    void bind(act act, sf::Keyboard::Key key){
+        acts[(int)key] = act;
+        keys[act] = key;
+    }
+    void unbind(act act){
+        acts[(int)keys[act]] = -1;
+        keys[act] = sf::Keyboard::Key::Unknown;
+    }
+
+    bool kHeld(act a){
         return states[a][1];
     }
 
-    bool kToggled(key a){
-        return states[a][2];
-    }
-
-    bool kPressed(key a){
+    bool kPressed(act a){
         return !states[a][0] & states[a][1];
     }
 
-    v2i getDHeld(key up, key down, key left, key right){
+    void feedEvent(const std::optional<sf::Event> &ev){
+        if(const auto *e = ev->getIf<sf::Event::KeyPressed>()){
+            int act = acts[(int)(e->code)];
+            // cout << act << '\n';
+            if(act != -1){
+                states[act][0] = states[act][1];
+                states[act][1] = 1;
+            }
+        }
+        if(const auto *e = ev->getIf<sf::Event::KeyReleased>()){
+            int act = acts[(int)(e->code)];
+            // cout << act << '\n';
+            if(act != -1){
+                states[act][0] = states[act][1];
+                states[act][1] = 0;
+            }
+        }
+    }
+
+    v2i getDHeld(act up, act down, act left, act right){
         v2i dir;
 
         if(keyHeld(up)){
@@ -54,7 +97,7 @@ namespace controls{
         return dir;
     }
 
-    v2i getDPressed(key up, key down, key left, key right){
+    v2i getDPressed(act up, act down, act left, act right){
         v2i dir;
 
         if(keyPressed(up)){

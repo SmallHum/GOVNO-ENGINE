@@ -9,7 +9,6 @@
 
 //including other stuff in panic
 #include <iostream>
-#include <windows.h>
 #include <cstdlib>
 // #include <math.h>
 #include <string>

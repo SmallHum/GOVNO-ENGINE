@@ -6,43 +6,52 @@
 #include <config.h>
 
 namespace controls{
-    typedef short key;
+    typedef short act;
 
-    extern key A_UP,
+    extern act A_UP,
                 A_DOWN,
                 A_LEFT,
                 A_RIGHT,
 
                 A_1,
                 A_2,
-                A_3,
-                A_CNSL;
+                A_3;
 
-    extern key acts[];
+    extern act acts[256];
+    extern sf::Keyboard::Key keys[7];
 
-    // Array of key states
+    // Array of act states
     // 7 keys, each has 3 elements
     // Index 0 - previous held state
     // Index 1 - current held state
-    // Index 2 - current toggled state
-    extern bool states[8][3];
+    extern bool states[7][2];
 
-    // Function for updating controls states
-    void updCtrls();
+    void init(
+        sf::Keyboard::Key up = sf::Keyboard::Key::Up,
+        sf::Keyboard::Key down = sf::Keyboard::Key::Down,
+        sf::Keyboard::Key left = sf::Keyboard::Key::Left,
+        sf::Keyboard::Key right = sf::Keyboard::Key::Right,
 
-    bool kHeld(key a);
-    bool kToggled(key a);
-    bool kPressed(key a);
+        sf::Keyboard::Key a1 = sf::Keyboard::Key::Z,
+        sf::Keyboard::Key a2 = sf::Keyboard::Key::X,
+        sf::Keyboard::Key a3 = sf::Keyboard::Key::C
+    );
+
+    void bind(act a, sf::Keyboard::Key key);
+    void unbind(act a);
+
+    bool kHeld(act a);
+    bool kPressed(act a);
+
+    void feedEvent(const std::optional<sf::Event> &ev);
 
     // Gets direction vector from keys held
     // Set to UP DOWN LEFT RIGHT by default
-    v2i getDHeld(key up = A_UP, key down = A_DOWN, key left = A_LEFT, key right = A_RIGHT);
-    v2i getDPressed(key up = A_UP, key down = A_DOWN, key left = A_LEFT, key right = A_RIGHT);
+    v2i getDHeld(act up = A_UP, act down = A_DOWN, act left = A_LEFT, act right = A_RIGHT);
+    v2i getDPressed(act up = A_UP, act down = A_DOWN, act left = A_LEFT, act right = A_RIGHT);
 };
 
-#define updateControls controls::updCtrls
 #define keyHeld controls::kHeld
-#define keyToggled controls::kToggled
 #define keyPressed controls::kPressed
 #define getDirHeld controls::getDHeld
 #define getDirPressed controls::getDPressed
