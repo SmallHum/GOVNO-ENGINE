@@ -24,68 +24,190 @@
 #define SHIFT_AND(COND) (SHIFT_DOWN && (COND))
 #define CTRL_AND(COND) (CTRL_DOWN && (COND))
 
-namespace node_gen{
-
-    shared_ptr<Node> randomType(){
-        StructId id = (StructId)(rand()%factory::creators.size());
-        shared_ptr<Node> result = factory::creators[id]();
-
-        result->name += ' ';
-        
-        size_t name_size = rand()%5 + 2;
-        for(size_t i = 0; i < name_size; i++){
-            char rand_cahr = (rand()%2) ? (rand() % ('z'-'a'+1) + 'a') : (rand() % ('Z'-'A'+1) + 'A');
-            result->name += rand_cahr;
-        }
-
-        if(auto s = dynamic_cast<Spatial*>(result.get())){
-            s->pos = {rand()%100 - 50, rand()%100 - 50};
-            s->angle = rand()%360;
-            s->scale = {((rand()%35)+15) / 25.f, ((rand()%35)+15)/25.f};
-        }
-
-        return result;
-    }
-
-    void genTree(weak_ptr<Node> root, int max_depth, int depth = 0){
-        if(depth == max_depth)
-            return;
-        int kids = 1+rand()%3;
-        for(int i = 0; i < kids; i++){
-            shared_ptr<Node> n = randomType();
-            root.lock()->addChild(n);
-            genTree(n,max_depth,depth+1);
-        }
-    }
-};
+using ImGui::MenuItem,
+        ImGui::Separator;
 
 namespace editor{
 
     shared_ptr<Node> node_root;
-    weak_ptr<Node> selection;
+    shared_ptr<Node> selection;
+    size_t selection_depth = 0;
+
+    namespace history{
+        struct Action{
+            bool failed = 0;
+
+            Action(){}
+
+            virtual void execute(){}
+            virtual void undo(){}
+        };
+
+        struct OnANode: Action{
+            shared_ptr<Node> selected;
+
+            OnANode(
+                shared_ptr<Node> sel = selection
+            ): Action(),
+                selected(sel)
+            {
+                failed = failed || !selected;
+                if(!selected){
+                    cout << "SELECTED SOMEHOW DOESN'T SATISFY (OnANode constructor)\n";
+                }
+            }
+        };
+
+        struct AddNode: OnANode{
+
+            shared_ptr<Node> added;
+
+            AddNode(
+                shared_ptr<Node> added,
+                shared_ptr<Node> sel = selection
+            ): OnANode(sel),
+                added(added)
+            {
+                failed = failed || !added;
+                if(!added){
+                    cout << "ADDED SOMEHOW DOESN'T SATISFY (AddNode constructor)\n";
+                }
+            }
+
+            void execute() override{
+                selected->addChild(added);
+            }
+            void undo() override{
+                added->removeGently();
+            }
+        };
+
+        size_t history_size;
+        Action **undo_data,
+                **redo_data;
+
+        size_t undo_end,
+                redo_end;
+
+        void init(size_t size){
+            history_size = size;
+
+            undo_end = redo_end = 0;
+
+            undo_data = new Action*[size];
+            redo_data = new Action*[size];
+        }
+
+        void logData(){
+            cout << "UNDO DATA:\n";
+            for(int i = 0; i < undo_end; i++){
+                cout << ((size_t)undo_data[i])%0x1000 << ' ';
+            }
+            cout << '\n';
+            cout << "REDO DATA:\n";
+            for(int i = 0; i < redo_end; i++){
+                cout << ((size_t)redo_data[i])%0x1000 << ' ';
+            }
+            cout << "\n---------\n";
+        }
+
+        void act(Action *a){
+            if(a->failed){
+                delete a;
+                return;
+            }
+
+            if(undo_end == history_size){
+                delete undo_data[0];
+                for(size_t i = 1; i < history_size; i++){
+                    undo_data[i-1] = undo_data[i];
+                }
+            }
+
+            undo_data[undo_end++] = a;
+            a->execute();
+
+            for(size_t i = 0; i < redo_end; i++)delete redo_data[i];
+            redo_end = 0;
+
+            // logData();
+        }
+
+        void undo(){
+            if(undo_end == 0){
+                cout << "I EITHER FORGOR OR THERE'S NOTHING TO BE UNDONE\n";
+                return;
+            }
+            // cout << "trying to undo...\n";
+            undo_data[undo_end-1]->undo();
+            // cout << "trying to fetch undo top to redo...\n";
+            redo_data[redo_end++] = undo_data[--undo_end];
+
+            // logData();
+        }
+
+        void redo(){
+            if(redo_end == 0){
+                cout << "I EITHER FORGOR OR THERE'S NOTHING TO BE REDONE\n";
+                return;
+            }
+            // cout << "trying to redo...\n";
+            redo_data[redo_end-1]->execute();
+            // cout << "trying to fetch redo top back to undo...\n";
+            undo_data[undo_end++] = redo_data[--redo_end];
+
+            // logData();
+        }
+
+        void exit(){
+            for(size_t i = 0; i < undo_end; i++) delete undo_data[i];
+            for(size_t i = 0; i < redo_end; i++) delete redo_data[i];
+            delete[] undo_data;
+            delete[] redo_data;
+        }
+    };
+
+    inline bool newWindow(
+        const char *label,
+        ImVec2 pos,
+        ImVec2 size,
+        ImVec2 min_size,
+        ImVec2 max_size,
+        ImGuiWindowFlags flags
+    ){
+        ImGui::SetNextWindowPos(pos);
+        ImGui::SetNextWindowSize(size);
+        ImGui::SetNextWindowSizeConstraints(min_size, max_size);
+        return ImGui::Begin(label, nullptr, flags);
+    }
 
     void init(){
         node_root = make_shared<Node>("root");
-        node_gen::genTree(node_root, 3);
-
-        // other = make_shared<AABB>();
-        // node_root->addChild(other);
-
         node_root->printTree();
+
+        selection = node_root;
+
+        history::init(64);
+    }
+
+    void exit(){
+        history::exit();
     }
 
     void open(){
+        string path = "saved.ntr";
         if(!node_root){
-            cout << "HOW DID YOU DELETE NODE ROOT LMAO\n"; return;
+            cout << "HOW DID YOU DELETE THE ROOT LMAO\n"; return;
         }
-        node_root = constructFromFile("saved.ntr");
+        node_root = constructFromFile(path);
     }
 
     void save(){
+        string path = "saved.ntr";
         if(!node_root){
-            cout << "HOW DID YOU DELETE NODE ROOT LMAO\n"; return;
+            cout << "HOW DID YOU DELETE THE ROOT LMAO\n"; return;
         }
-        node_root->writeToFile("saved.ntr");
+        node_root->writeToFile(path);
     }
 
     void editFieldBool(string label, bool &v){
@@ -121,17 +243,13 @@ namespace editor{
     void editFieldString(string label, string &v, bool multiline = 0){
         string buffer = v;
 
-        if(multiline){
-            if(!ImGui::InputTextMultiline(label.c_str(), &buffer))
+        if(multiline && !ImGui::InputTextMultiline(label.c_str(), &buffer))
                 return;
-        }
-        else{
-            if(!ImGui::InputText(label.c_str(), &buffer))
-                return;
-        }
-        if(!PRESSED(ImGuiKey_Enter))
+        else if(!ImGui::InputText(label.c_str(), &buffer))
                 return;
         
+        if(!PRESSED(ImGuiKey_Enter))
+                return;
 
         cout << "    applying " << label << '\n';
         v.resize(strlen(buffer.c_str()));
@@ -189,141 +307,129 @@ namespace editor{
         actions_width = 160,
         bar_height_button_size = 26,
         edit_width = 240,
-        edit_pos_x;
+        edit_pos_x, menu_aware_height;
 
     float wheel_delta_x, wheel_delta_y;
 
-    shared_ptr<Node> getHovered(shared_ptr<Node> root, weak_ptr<Node> avoid){
-        if(root == avoid.lock())return shared_ptr<Node>();
-
+    shared_ptr<Node> getHovered(shared_ptr<Node> root, size_t depth = 0){
         Spatial *sp = dynamic_cast<Spatial *>(root.get());
 
-        if(sp){
+        if(sp && selection_depth < depth){
             auto m = ImGui::GetMousePos();
             if((v2f(m.x,m.y) - sp->getGlobalPos() + cam_pos).length() <= sel_margin){
+                selection_depth = depth + 1;
                 return root;
             }
         }
 
         for(auto &i : root->children){
-            auto result = getHovered(i, avoid);
+            auto result = getHovered(i, depth + 1);
             if(result)return result;
         }
 
+        selection_depth = 0;
         return shared_ptr<Node>();
     }
 
-    void process(float &dt){
-
-        // if(ImGui::IsMouseClicked(ImGuiMouseButton_Left)){
-        //     selection = getHovered(node_root, selection);
-        //     cout << selection.lock()->name << '\n';
-        // }
-
-        id_fix = 0;
-
-        wheel_delta_x = wheel_delta_y = 0.f;
-
-        // Menu bar.
-        // TODO: 
-        // - Copy, cut, paste.
-        // - Folder view on open and save.
-        // - Discartion alert on opening.
+    void menuProc(float &dt){
         if(ImGui::BeginMainMenuBar()){
             if(ImGui::BeginMenu("File")){
-                if(ImGui::MenuItem("Open", "Ctrl+O"))open();
-                if(ImGui::MenuItem("Save", "Ctrl+S"))save();
+
+                if(MenuItem("Open", "Ctrl+O"))open();
+                if(MenuItem("Save", "Ctrl+S"))save();
+
                 ImGui::EndMenu();
             }
 
             if(ImGui::BeginMenu("Edit")){
-                if(ImGui::MenuItem("New Node", "Ctrl+N"))ImGui::OpenPopup("Make Node");
-                if(ImGui::MenuItem("Delete Node", "Del")){}
-                ImGui::Separator();
-                if(ImGui::MenuItem("Copy", "Ctrl+C")){}
-                if(ImGui::MenuItem("Paste", "Ctrl+V")){}
-                ImGui::Separator();
-                if(ImGui::MenuItem("Move Camera", "Shift+F"))controlling_camera = 1;
+                if(MenuItem("Delete Node", "Del")){}
+
+                Separator();
+
+                if(MenuItem("Copy", "Ctrl+C")){}
+                if(MenuItem("Paste", "Ctrl+V")){}
+
+                Separator();
+
+                if(MenuItem("Undo", "Ctrl+Z"))history::undo();
+                if(MenuItem("Redo", "Ctrl+Y"))history::redo();
+
                 ImGui::EndMenu();
             }
 
             ImGui::EndMainMenuBar();
         }
 
-        // Keyboard actions.
-        if(PRESSED(ImGuiKey_Delete)){}
-        if(CTRL(ImGuiKey_N))
-            ImGui::OpenPopup("Make Node");
-        if(CTRL(ImGuiKey_C)){}
-        if(CTRL(ImGuiKey_S))
-            save();
-        if(CTRL(ImGuiKey_V)){}
-        if(CTRL(ImGuiKey_O))
-            open();
-        if(SHIFT(ImGuiKey_F))
-            controlling_camera = 1;
-        if(CTRL(ImGuiKey_Z)){}
-        if(CTRL(ImGuiKey_Y)){}
+        if(CTRL(ImGuiKey_O))open();
+        else if(CTRL(ImGuiKey_S))save();
+        else if(PRESSED(ImGuiKey_Delete)){}
+        else if(CTRL(ImGuiKey_C)){}
+        else if(CTRL(ImGuiKey_V)){}
+        else if(CTRL(ImGuiKey_Z))history::undo();
+        else if(CTRL(ImGuiKey_Y))history::redo();
+    }
 
-        float height = viewport::wind.getSize().y-bar_height_button_size;
+    void treeViewProc(float &dt){
+        menu_aware_height = viewport::wind.getSize().y-bar_height_button_size;
 
-        // Tree view window.
-        ImGui::SetNextWindowPos({0,bar_height_button_size});
-        ImGui::SetNextWindowSize({tree_view_width,height});
-        ImGui::SetNextWindowSizeConstraints(
-            {240,height},
-            {FLT_MAX,height}
-        );
-        ImGui::Begin("Tree view", nullptr, 
+        if(newWindow(
+            "Tree view", 
+            {0,bar_height_button_size}, 
+            {tree_view_width,menu_aware_height},
+            {240,menu_aware_height},
+            {FLT_MAX,menu_aware_height},
             ImGuiWindowFlags_NoMove 
             | ImGuiWindowFlags_NoCollapse 
-            | ImGuiWindowFlags_NoScrollWithMouse);
-
-        tree_view_width = ImGui::GetWindowSize().x;
-
-        // ImGui::Columns(2);
+            | ImGuiWindowFlags_NoScrollWithMouse
+        )){
+            tree_view_width = ImGui::GetWindowSize().x;
+            // ImGui::Columns(2);
         
-        // tree_root->drawCol1(active_selection, multiple_selection);
-        // ImGui::NextColumn();
+            // tree_root->drawCol1(active_selection, multiple_selection);
+            // ImGui::NextColumn();
+            
+            // tree_root->drawCol2();
+
+            ImGui::End();
+        }
+
+
         
-        // tree_root->drawCol2();
+    } // void treeViewProc(float &dt)
 
-        ImGui::End();
-
-        // Node editing window.
-        // Kinda stolen from Godot.
+    void editProc(float &dt){
         edit_pos_x = viewport::wind.getSize().x - edit_width;
-        ImGui::SetNextWindowPos({edit_pos_x,bar_height_button_size});
-        ImGui::SetNextWindowSize({edit_width,height});
-        ImGui::SetNextWindowSizeConstraints(
-            {240,height},
-            {FLT_MAX,height}
-        );
-        ImGui::Begin("Edit", nullptr, 
-            ImGuiWindowFlags_NoMove 
+
+        if(newWindow(
+            "Edit",
+            {edit_pos_x,bar_height_button_size},
+            {edit_width,menu_aware_height},
+            {240,menu_aware_height},
+            {FLT_MAX,menu_aware_height},
+            ImGuiWindowFlags_NoMove
             | ImGuiWindowFlags_NoCollapse 
-            | ImGuiWindowFlags_NoScrollWithMouse);
+            | ImGuiWindowFlags_NoScrollWithMouse
+        )){
+            if(selection)
+            nodeEditMenu(selection.get());
 
+            ImGui::End();
+        }
+    } // void editProc(float &dt)
 
-        if(auto s = selection.lock())
-            nodeEditMenu(s.get());
+    void toolsList(float &dt){
 
-        ImGui::End();
-
-        // Make node popup.
-        // Need to upgrade it.
-        if(ImGui::BeginPopup("Make Node")){
-
-            for(auto& i : factory::creators){
-                if(ImGui::Button(factory::names[(size_t)i.first].c_str(),{64,26})){
-                    // newNode(i.second);
-                    ImGui::CloseCurrentPopup();
-                }
+        if(ImGui::Begin("Tools")){
+            for(auto &i : factory::creators)
+            if(ImGui::Button(factory::names[(size_t)i.first].c_str())){
+                history::act(new history::AddNode(i.second(), selection));
             }
 
-            ImGui::EndPopup();
+            ImGui::End();
         }
-        
+    } // void makeNodePopUp(float &dt)
+
+    void viewportProc(float &dt){
         any_editor_window_focused = ImGui::IsWindowFocused(
             ImGuiFocusedFlags_AnyWindow | 
             ImGuiFocusedFlags_ChildWindows
@@ -331,23 +437,35 @@ namespace editor{
 
         if(any_editor_window_focused)return;
 
-        cam_pos.x += wheel_delta_x * 5.f;
-        cam_pos.y += wheel_delta_y * 5.f;
+        if(ImGui::IsMouseClicked(ImGuiMouseButton_Left)){
+            selection = getHovered(node_root);
+        }
 
-        if(auto s = selection.lock()){
-            auto p = dynamic_cast<Spatial*>(s.get());
+        cam_pos.x -= wheel_delta_x * 128.f;
+        cam_pos.y -= wheel_delta_y * 128.f;
+        wheel_delta_x = wheel_delta_y = 0.f;
+
+        if(selection){
+            auto p = dynamic_cast<Spatial*>(selection.get());
             if(p){
                 p->pos += 150.f * dt * v2f(getDirHeld());
                 if(PRESSED(ImGuiKey_Q))p->angle += 50.f * dt;
                 if(PRESSED(ImGuiKey_W))p->angle -= 50.f * dt;
             }
-
-            // auto aabb = dynamic_cast<AABB*>(s->ref.lock().get());
-            // if(aabb)
-            //     if(aabb->intersectAABB(other))
-            //         cout << "COLLISION DETECTED YAY!!!\n";
         }
-    }
+    } // void viewportProc(float &dt)
+
+    void process(float &dt){
+
+        id_fix = 0;
+
+        menuProc(dt);
+        treeViewProc(dt);
+        editProc(dt);
+        toolsList(dt);
+
+        viewportProc(dt);
+    } 
 };
 
 void init(){
@@ -373,6 +491,7 @@ void init(){
 
 void exit(){
     viewport::exit();
+    editor::exit();
 }
 
 int main(){
@@ -407,9 +526,9 @@ int main(){
             }
             if(const auto* e = ev->getIf<sf::Event::MouseWheelScrolled>()){
                 float d = e->delta;
-                if(e->wheel == sf::Mouse::Wheel::Horizontal)
+                if(e->wheel == sf::Mouse::Wheel::Horizontal || SHIFT_AND(e->wheel == sf::Mouse::Wheel::Vertical))
                     editor::wheel_delta_x = d;
-                if(e->wheel == sf::Mouse::Wheel::Vertical)
+                if(e->wheel == sf::Mouse::Wheel::Vertical && !SHIFT_DOWN)
                     editor::wheel_delta_y = d;
             }
         }
