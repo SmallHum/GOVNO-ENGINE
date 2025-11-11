@@ -1,26 +1,48 @@
-set "compiler=g++"
+compiler='g++'
 
-set "app_name=gve-editor"
+app_name='gve-editor'
 
-set "src=..\..\src"
+build="build/linux 64x"
+includes='-ISFML-LINUX/include -Isrc/include'
 
-set "build=..\..\build\linux 64x"
-set "includes=-I..\..\SFML-LINUX\include -I..\..\src\include"
+compile="src/tools/editor.cpp \
+	src/viewport.cpp \
+	src/assets.cpp \
+	src/struct_loader.cpp \
+	src/label.cpp \
+	src/aabb.cpp \
+	src/spatial.cpp \
+	src/node.cpp \
+	src/controls.cpp"
 
-set "compile=%src%\tools\editor.cpp %src%\viewport.cpp %src%\assets.cpp %src%\struct_loader.cpp %src%\label.cpp %src%\aabb.cpp %src%\spatial.cpp %src%\node.cpp %src%\controls.cpp"
+imgui_obj="imgui.o \
+	imgui_stdlib.o \
+	imgui_impl_opengl3.o \
+	imgui_draw.o \
+	imgui_tables.o \
+	imgui_widgets.o \
+	imgui-SFML.o"
 
-set "imgui_obj=imgui.o imgui_stdlib.o imgui_impl_opengl3.o imgui_draw.o imgui_tables.o imgui_widgets.o imgui-SFML.o"
-set "myobj=editor.o viewport.o assets.o struct_loader.o label.o aabb.o spatial.o node.o controls.o"
+myobj="editor.o \
+	viewport.o \
+	assets.o \
+	struct_loader.o \
+	label.o \
+	aabb.o \
+	spatial.o \
+	node.o \
+	controls.o"
 
-set "obj=%imgui_obj% %myobj%"
+sfl="SFML-LINUX/lib/libsfml"
 
-set "sfml_link=-L../../SFML-LINUX/lib -DSFML_STATIC -lsfml-system -lsfml-window -lsfml-graphics -lsfml-audio"
+sfml_link="$sfl-graphics-s.a $sfl-window-s.a $sfl-audio-s.a $sfl-system-s.a"
 
-set "link=-static-libstdc++ -static-libgcc -lpthread -lopengl32 %sfml_link%"
+link="-lX11 -lXrandr -lXcursor -lXinerama -lXi \
+	-lglut -lGLU -lGL -lfreetype -lopenal -ludev \
+	-lvorbis -lvorbisenc -lvorbisfile -logg -lFLAC \
+	-lpthread -ldl -static-libstdc++ -static-libgcc"
 
-%compiler% -std=c++17 -fexec-charset=cp1251 -c %compile% %includes% -O2 -Wno-narrowing
-%compiler% -std=c++17 -o "%build%/%app_name%" %obj% -static %link%
-cd %build%
-strip "%app_name%"
-"%app_name%"
-pause
+g++ -c $compile $includes -Wno-narrowing
+g++ -o "$build/$app_name" $myobj $imgui_obj $sfml_link $link
+cd "$build"
+"$app_name"
