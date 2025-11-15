@@ -5,9 +5,9 @@
 #include <core/viewport.h>
 #include <struct_loader.h>
 
-#include <imgui/imgui.h>
-#include <imgui/imgui_stdlib.h>
-#include <imgui/imgui-SFML.h>
+#include <imgui.h>
+#include <misc/cpp/imgui_stdlib.h>
+#include <imgui-SFML.h>
 
 #define CTRL_DOWN (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || \
         ImGui::IsKeyDown(ImGuiKey_RightCtrl))
