@@ -96,11 +96,20 @@ namespace viewport{
     priority_queue<DrawInfo> draw_queue;
 
     v2f cam_pos = {-480.f,-360.f};
+    float zoom = 1.f;
 
     void init(v2u r, string name){
         wind = sf::RenderWindow(sf::VideoMode(r),name);
         res = r;
         wind.setFramerateLimit(60);
+    }
+
+    mat3 getCamTransform(){
+        return mat3().scale({zoom, zoom}).translate(-cam_pos);
+    }
+
+    v2f getGlobalCursorPos(){
+        return v2f(sf::Mouse::getPosition(wind))/zoom + cam_pos;
     }
 
     void display(float dt){
@@ -113,13 +122,14 @@ namespace viewport{
             drawOver(&debug::fps_text, 0, 1);
         }
         // cout << "queue processing started...\n";
+        zoom = std::min(std::max(zoom, 0.1f), 10.f);
         while(!draw_queue.empty()){
             DrawInfo curr = draw_queue.top();
             // cout << "trying to draw...  " << curr.d << '\n';
             mat3 transform = curr.transform;
             // cout << "trying to apply cam transform..." << '\n';
             if(!curr.follow_cam)
-                transform = mat3().translate(-cam_pos).combine(transform);
+                transform = getCamTransform().combine(transform);
             // cout << "trying to draw like for real..." << '\n';
             sf::Sprite *spr = dynamic_cast<sf::Sprite*>(curr.d);
             // cout << spr;

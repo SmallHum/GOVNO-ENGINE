@@ -14,7 +14,7 @@ set "myobj=editor.o viewport.o assets.o struct_loader.o label.o aabb.o spatial.o
 
 set "obj=%imgui_obj% %myobj%"
 
-set "sfml_link=-L../../SFML/lib -DSFML_STATIC -lsfml-system -lsfml-window -lsfml-graphics -lsfml-audio"
+set "sfml_link=-L../../SFML/lib -lsfml-system -lsfml-window -lsfml-graphics -lsfml-audio"
 
 set "link=-static-libstdc++ -static-libgcc -lpthread -lopengl32 %sfml_link%"
 

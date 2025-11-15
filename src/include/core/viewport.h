@@ -65,8 +65,13 @@ namespace viewport{
     extern priority_queue<DrawInfo> draw_queue;
 
     extern v2f cam_pos;
+    extern float zoom;
 
     void init(v2u res, string name = "TEST WINDOW");
+
+    mat3 getCamTransform();
+    v2f getGlobalCursorPos();
+    v2f getRelativeCursorPos();
 
     void display(float dt);
 

@@ -33,6 +33,8 @@ namespace editor{
     shared_ptr<Node> selection;
     size_t selection_depth = 0;
 
+    int id_fix = 0;
+
     namespace history{
         struct Action{
             bool failed = 0;
@@ -44,30 +46,34 @@ namespace editor{
         };
 
         struct OnANode: Action{
-            shared_ptr<Node> selected;
+            shared_ptr<Node> selected_on_action;
 
             OnANode(
-                shared_ptr<Node> sel = selection
+                shared_ptr<Node> selected_on_action = selection
             ): Action(),
-                selected(sel)
+                selected_on_action(selected_on_action)
             {
-                failed = failed || !selected;
-                if(!selected){
+                failed = failed || !selected_on_action;
+                if(!selected_on_action){
                     cout << "SELECTED SOMEHOW DOESN'T SATISFY (OnANode constructor)\n";
                 }
             }
         };
 
         struct AddNode: OnANode{
-
             shared_ptr<Node> added;
 
             AddNode(
                 shared_ptr<Node> added,
-                shared_ptr<Node> sel = selection
-            ): OnANode(sel),
+                shared_ptr<Node> selected_on_action = selection
+            ): OnANode(selected_on_action),
                 added(added)
             {
+                if(failed){
+                    cout << "SETTING SELECTED AS NODE ROOT...\n";
+                    failed = 0;
+                    selected_on_action = node_root;
+                }
                 failed = failed || !added;
                 if(!added){
                     cout << "ADDED SOMEHOW DOESN'T SATISFY (AddNode constructor)\n";
@@ -75,10 +81,36 @@ namespace editor{
             }
 
             void execute() override{
-                selected->addChild(added);
+                selected_on_action->addChild(added);
             }
             void undo() override{
                 added->removeGently();
+            }
+        };
+
+        struct DeleteNode: OnANode{
+            shared_ptr<Node> parent;
+            size_t del_index;
+
+            DeleteNode(
+                shared_ptr<Node> selected_on_action = selection
+            ): OnANode(selected_on_action),
+                parent(selected_on_action->parent),
+                del_index(selected_on_action->parent_index)
+            {
+                failed = failed || !parent;
+                if(!parent){
+                    cout << "PARENT SOMEHOW DOESN'T SATISFY (DeleteNode constructor)\n";
+                }
+            }
+
+            void execute() override{
+                parent->removeChild(selected_on_action);
+
+                selection.reset();
+            }
+            void undo() override{
+                parent->addChild(selected_on_action, del_index);
             }
         };
 
@@ -243,10 +275,13 @@ namespace editor{
     void editFieldString(string label, string &v, bool multiline = 0){
         string buffer = v;
 
-        if(multiline && !ImGui::InputTextMultiline(label.c_str(), &buffer))
+        // ImGui::PushID(id_fix++);
+        if(multiline){
+            if(!ImGui::InputTextMultiline(label.c_str(), &buffer))
                 return;
-        else if(!ImGui::InputText(label.c_str(), &buffer))
+        }else if(!ImGui::InputText(label.c_str(), &buffer))
                 return;
+        // ImGui::PopID();
         
         if(!PRESSED(ImGuiKey_Enter))
                 return;
@@ -295,7 +330,6 @@ namespace editor{
         if(s)spatialEditMenu(s);
     }
 
-    int id_fix = 0;
     int sel_margin = 20;
 
     bool any_editor_window_focused = 0,
@@ -311,12 +345,30 @@ namespace editor{
 
     float wheel_delta_x, wheel_delta_y;
 
+    void feedEvent(const std::optional<sf::Event> &ev){
+        if(const auto* e = ev->getIf<sf::Event::MouseWheelScrolled>()){
+                float d = e->delta;
+                if(CTRL_DOWN){
+                    v2f old_global_cursor_pos = viewport::getGlobalCursorPos();
+                    viewport::zoom += d*0.1f;
+                    cam_pos += old_global_cursor_pos - viewport::getGlobalCursorPos();
+                    cout << viewport::cam_pos << '\n';
+                    return;
+                }
+                if(e->wheel == sf::Mouse::Wheel::Horizontal || SHIFT_AND(e->wheel == sf::Mouse::Wheel::Vertical))
+                    editor::wheel_delta_x = d/viewport::zoom;
+                if(e->wheel == sf::Mouse::Wheel::Vertical && !SHIFT_DOWN)
+                    editor::wheel_delta_y = d/viewport::zoom;
+        }
+    }
+
     shared_ptr<Node> getHovered(shared_ptr<Node> root, size_t depth = 0){
         Spatial *sp = dynamic_cast<Spatial *>(root.get());
 
         if(sp && selection_depth < depth){
-            auto m = ImGui::GetMousePos();
-            if((v2f(m.x,m.y) - sp->getGlobalPos() + cam_pos).length() <= sel_margin){
+            v2f m = viewport::getGlobalCursorPos();
+            // cout << m << '\n';
+            if((m - sp->getGlobalPos()).length() <= sel_margin){
                 selection_depth = depth + 1;
                 return root;
             }
@@ -342,7 +394,8 @@ namespace editor{
             }
 
             if(ImGui::BeginMenu("Edit")){
-                if(MenuItem("Delete Node", "Del")){}
+                if(MenuItem("Delete Node", "Del"))
+                    history::act(new history::DeleteNode());
 
                 Separator();
 
@@ -362,12 +415,58 @@ namespace editor{
 
         if(CTRL(ImGuiKey_O))open();
         else if(CTRL(ImGuiKey_S))save();
-        else if(PRESSED(ImGuiKey_Delete)){}
+        else if(PRESSED(ImGuiKey_Delete))
+            history::act(new history::DeleteNode());
         else if(CTRL(ImGuiKey_C)){}
         else if(CTRL(ImGuiKey_V)){}
         else if(CTRL(ImGuiKey_Z))history::undo();
         else if(CTRL(ImGuiKey_Y))history::redo();
     }
+
+    namespace tree_view{
+        struct node_info{
+            bool collapsed;
+        };
+
+        unordered_map<Node *, node_info> data;
+
+        void update(shared_ptr<Node> n = node_root){
+            if(data.find(n.get()) == data.end())
+                data[n.get()] = {1};
+            
+            for(auto &i : n->children)
+                update(i);
+        }
+
+        void drawCol1(shared_ptr<Node> n = node_root, unsigned int depth = 1){
+            ImGui::SetCursorPosX(depth * 32);
+
+            ImGui::PushID(id_fix++);
+            if(ImGui::Button(data[n.get()].collapsed ? ">" : "v", {24, 24}))
+                data[n.get()].collapsed = !data[n.get()].collapsed;
+            ImGui::SameLine();
+            ImGui::Text(n->name.c_str());
+            if(ImGui::IsItemClicked())
+                selection = n;
+            ImGui::PopID();
+
+            if(!data[n.get()].collapsed)
+                for(auto &i : n->children)
+                    drawCol1(i, depth + 1);
+        }
+        void drawCol2(shared_ptr<Node> n = node_root){
+
+            ImGui::PushID(id_fix++);
+            if(ImGui::Checkbox("", &n->visible)){
+                n->visible = !n->visible;
+            }
+            ImGui::PopID();
+
+            if(!data[n.get()].collapsed)
+                for(auto &i : n->children)
+                    drawCol2(i);
+        }
+    };
 
     void treeViewProc(float &dt){
         menu_aware_height = viewport::wind.getSize().y-bar_height_button_size;
@@ -382,13 +481,15 @@ namespace editor{
             | ImGuiWindowFlags_NoCollapse 
             | ImGuiWindowFlags_NoScrollWithMouse
         )){
+            tree_view::update();
+
             tree_view_width = ImGui::GetWindowSize().x;
-            // ImGui::Columns(2);
+            ImGui::Columns(2);
         
-            // tree_root->drawCol1(active_selection, multiple_selection);
-            // ImGui::NextColumn();
+            tree_view::drawCol1();
+            ImGui::NextColumn();
             
-            // tree_root->drawCol2();
+            tree_view::drawCol2();
 
             ImGui::End();
         }
@@ -522,19 +623,12 @@ int main(){
         //update events
         while(const std::optional ev = viewport::wind.pollEvent()){
             ImGui::SFML::ProcessEvent(viewport::wind,*ev);
-            
-            controls::feedEvent(ev);
-
+           
             if(ev->is<sf::Event::Closed>()){
                 exit();
             }
-            if(const auto* e = ev->getIf<sf::Event::MouseWheelScrolled>()){
-                float d = e->delta;
-                if(e->wheel == sf::Mouse::Wheel::Horizontal || SHIFT_AND(e->wheel == sf::Mouse::Wheel::Vertical))
-                    editor::wheel_delta_x = d;
-                if(e->wheel == sf::Mouse::Wheel::Vertical && !SHIFT_DOWN)
-                    editor::wheel_delta_y = d;
-            }
+            editor::feedEvent(ev);
+            controls::feedEvent(ev);
         }
 
         //physics

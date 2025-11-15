@@ -51,28 +51,6 @@ using std::cin, std::cout,
 
 const static int debug_info_z = 9999;
 
-// static mat3 onlyRotAndScale(mat3 &m){
-//     return mat3(
-//         m.getMatrix()[0],m.getMatrix()[1],0.f,
-//         m.getMatrix()[4],m.getMatrix()[5],0.f,
-//         0.f, 0.f, 0.f
-//     );
-// }
-
-// static mat3 invertRotAndScale(mat3 &m){
-//     float a = m.getMatrix()[0],
-//           b = m.getMatrix()[1],
-//           c = m.getMatrix()[4],
-//           d = m.getMatrix()[5],
-//           k = (a*d) - (b*c);
-
-//     return mat3(
-//         d/k,-b/k,0.f,
-//         -c/k,a/k,0.f,
-//         0.f, 0.f, 0.f
-//     );
-// }
-
 static sf::Color hsv(unsigned int h, unsigned int s = 100, unsigned int v = 100){
     unsigned int r, g, b;
     h = h%360;

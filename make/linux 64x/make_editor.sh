@@ -40,7 +40,7 @@ sfml_link="$sfl-graphics-s.a $sfl-window-s.a $sfl-audio-s.a $sfl-system-s.a"
 link="-lX11 -lXrandr -lXcursor -lXinerama -lXi \
 	-lglut -lGLU -lGL -lfreetype -lopenal -ludev \
 	-lvorbis -lvorbisenc -lvorbisfile -logg -lFLAC \
-	-lpthread -ldl -static-libstdc++ -static-libgcc"
+	-lpthread -ldl"
 
 g++ -c $compile $includes -Wno-narrowing
 g++ -o "$build/$app_name" $myobj $imgui_obj $sfml_link $link

@@ -29,6 +29,7 @@ struct Node : std::enable_shared_from_this<Node>{
     Node(string name);
 
     void addChild(shared_ptr<Node> node);
+    void addChild(shared_ptr<Node> node, size_t index);
 
     void removeChild(shared_ptr<Node> node);
     void removeChild(size_t index);

@@ -28,6 +28,19 @@ void Node::addChild(shared_ptr<Node> node){
         spat_node->updateTransform();
 }
 
+void Node::addChild(shared_ptr<Node> node, size_t index){
+    addChild(node);
+
+    if(children.size() < 2)return;
+    
+    for(size_t i = children.size()-2; i > index; i--){
+        auto temp = children[i];
+        temp->parent_index++;
+        children[i] = children[i+1];
+        children[i+1] = temp;
+    }
+}
+
 void Node::removeChild(shared_ptr<Node> node){
     size_t n = children.size();
     for(int i = 0; i < n; i++)
