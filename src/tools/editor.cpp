@@ -53,9 +53,9 @@ namespace editor{
             ): Action(),
                 selected_on_action(selected_on_action)
             {
-                failed = failed || !selected_on_action;
-                if(!selected_on_action){
-                    cout << "SELECTED SOMEHOW DOESN'T SATISFY (OnANode constructor)\n";
+                failed = failed || !this->selected_on_action;
+                if(!this->selected_on_action){
+                    cout << failed << " SELECTED SOMEHOW DOESN'T SATISFY (OnANode constructor)\n";
                 }
             }
         };
@@ -72,11 +72,11 @@ namespace editor{
                 if(failed){
                     cout << "SETTING SELECTED AS NODE ROOT...\n";
                     failed = 0;
-                    selected_on_action = node_root;
+                    this->selected_on_action = node_root;
                 }
                 failed = failed || !added;
                 if(!added){
-                    cout << "ADDED SOMEHOW DOESN'T SATISFY (AddNode constructor)\n";
+                    cout << failed << " ADDED SOMEHOW DOESN'T SATISFY (AddNode constructor)\n";
                 }
             }
 
@@ -94,13 +94,16 @@ namespace editor{
 
             DeleteNode(
                 shared_ptr<Node> selected_on_action = selection
-            ): OnANode(selected_on_action),
-                parent(selected_on_action->parent),
-                del_index(selected_on_action->parent_index)
+            ): OnANode(selected_on_action)
             {
-                failed = failed || !parent;
-                if(!parent){
-                    cout << "PARENT SOMEHOW DOESN'T SATISFY (DeleteNode constructor)\n";
+                if(failed)return;
+
+                this->parent = this->selected_on_action->parent.lock();
+                del_index = this->selected_on_action->parent_index;
+
+                failed = failed || !this->parent;
+                if(!this->parent){
+                    cout << failed << " PARENT SOMEHOW DOESN'T SATISFY (DeleteNode constructor)\n";
                 }
             }
 
@@ -145,7 +148,9 @@ namespace editor{
 
         void act(Action *a){
             if(a->failed){
+                cout << "FAILED (editor::history::act)\n";
                 delete a;
+                cout << "ACTION OBJECT DELETED (editor::history::act)\n";
                 return;
             }
 

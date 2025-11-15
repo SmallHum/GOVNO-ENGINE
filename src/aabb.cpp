@@ -1,6 +1,5 @@
 #include <structs/aabb.h>
 #include <core/viewport.h>
-#include <struct_loader.h>
 
 AABB::AABB(): Spatial(){
     name = "AABB";

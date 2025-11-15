@@ -1,6 +1,5 @@
 #include <structs/label.h>
 #include <core/viewport.h>
-#include <struct_loader.h>
 
 Label::Label():
     Spatial(),

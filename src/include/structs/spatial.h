@@ -25,7 +25,7 @@ struct Spatial : Node{
 
     void updateLocalTransform();
 
-    void updateTransform();
+    void updateTransform() override;
 
     mat3 getGlobalTransform();
 

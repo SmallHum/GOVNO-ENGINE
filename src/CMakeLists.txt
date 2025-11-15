@@ -45,10 +45,13 @@ add_executable(${PROJECT_NAME}
 	viewport.cpp 
 	assets.cpp 
 	struct_loader.cpp 
+	
 	label.cpp 
 	aabb.cpp 
 	spatial.cpp 
 	node.cpp 
+
+	fstream_opers.cpp 
 	controls.cpp
 	)
 

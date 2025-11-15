@@ -1,6 +1,5 @@
 #include <structs/spatial.h>
 #include <core/viewport.h>
-#include <struct_loader.h>
 
 Spatial::Spatial(): Node(){
     name = "Spatial";

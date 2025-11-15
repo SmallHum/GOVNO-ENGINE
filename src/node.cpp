@@ -1,5 +1,4 @@
 #include <structs/node.h>
-#include <struct_loader.h>
 
 Node::Node(){
     name = "Node";
@@ -23,9 +22,7 @@ void Node::addChild(shared_ptr<Node> node){
     node->parent_index = children.size();
     children.push_back(node);
 
-    Spatial *spat_node = dynamic_cast<Spatial*>(node.get());
-    if(spat_node)
-        spat_node->updateTransform();
+    node->updateTransform();
 }
 
 void Node::addChild(shared_ptr<Node> node, size_t index){
@@ -163,22 +160,6 @@ void Node::writeToStream(fstream &stream){
 
     for(auto &i : children)
         i->writeToStream(stream);
-}
-
-void Node::copy(weak_ptr<Node> node){
-    if(auto n = node.lock()){
-        name = n->name;
-        active = n->active;
-        visible = n->visible;
-        for(auto &i : n->children){
-            shared_ptr<Node> result = factory::create(i->getStructId());
-            result->copy(i);
-            addChild(result);
-        }
-    }
-    else{
-        cout << "Node NOT constructed due to invalid pointer.\n";
-    }
 }
 
 Node::~Node(){
