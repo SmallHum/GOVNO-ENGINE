@@ -1,8 +1,12 @@
-#include <structs/spatial.h>
+#include <structs/node.h>
+#include <struct_loader.h>
+
+Node::Node(){
+    name = "Node";
+}
 
 Node::Node(string name): name(name){
     std::cout << "Node " << name << " constructed." << '\n';
-    icon = (unsigned char)249;
 }
 
 StructId Node::getStructId(){
@@ -24,6 +28,19 @@ void Node::addChild(shared_ptr<Node> node){
         spat_node->updateTransform();
 }
 
+void Node::addChild(shared_ptr<Node> node, size_t index){
+    addChild(node);
+
+    if(children.size() < 2)return;
+    
+    for(size_t i = children.size()-2; i > index; i--){
+        auto temp = children[i];
+        temp->parent_index++;
+        children[i] = children[i+1];
+        children[i+1] = temp;
+    }
+}
+
 void Node::removeChild(shared_ptr<Node> node){
     size_t n = children.size();
     for(int i = 0; i < n; i++)
@@ -35,6 +52,14 @@ void Node::removeChild(size_t index){
     if(index >= children.size())return;
     children[index]->parent.reset();
     children.erase(children.begin() + index);
+
+    for(size_t i = index; i < children.size(); i++)
+        children[i]->parent_index--;
+}
+
+void Node::removeGently(){
+    if(auto p = parent.lock())
+        p->removeChild(parent_index);
 }
 
 shared_ptr<Node> Node::find(string path){
@@ -62,18 +87,17 @@ shared_ptr<Node> Node::find(string path){
 }
 
 void Node::printTree(int spaces){
-    for(int i = 0; i < spaces; i++) std::cout << "  ";
-    std::cout << icon << ' ' << name << '\n';
-
+    for(int i = 0; i < spaces; i++) cout << "  ";
+    cout << name << '\n';
     for(auto& i : children) i->printTree(spaces+1);
 }
-void Node::printInfo(std::ostream& s){
-    s << (int)getStructId() << '\n';
-    s << "Node:\n" <<
-    " name: " << name << '\n' <<
-    " active: " << prettyBool(active) << '\n' <<
-    " visible: " << prettyBool(visible) << '\n';
-}
+// void Node::printInfo(std::ostream& s){
+//     s << (int)getStructId() << '\n';
+//     s << "Node:\n" <<
+//     " name: " << name << '\n' <<
+//     " active: " << prettyBool(active) << '\n' <<
+//     " visible: " << prettyBool(visible) << '\n';
+// }
 
 void Node::onCreation(){}
 
@@ -100,6 +124,61 @@ void Node::draw(){
 void Node::drawDebug(){
     for(auto& i : children)
         i->drawDebug();
+}
+
+void Node::writeToFile(string file){
+    fstream stream(file, std::ios::out | std::ios::binary);
+
+    if(!stream.is_open()){
+        cout << "ERROR: couldn't write to file " << file << "\n";
+        return;
+    }
+
+    writeToStream(stream);
+
+    stream.close();
+}
+
+void Node::writer(fstream &stream){
+    fstreamWrite(stream,name);
+    fstreamWrite<bool>(stream,active);
+    fstreamWrite<bool>(stream,visible);
+}
+
+void Node::reader(fstream& stream){
+    name = fstreamRead(stream);
+    active = fstreamRead<bool>(stream);
+    visible = fstreamRead<bool>(stream);
+}
+
+void Node::writeToStream(fstream &stream){
+
+    unsigned int id = (unsigned int)getStructId();
+    fstreamWrite<unsigned int>(stream, id);
+
+    writer(stream);
+
+    size_t size = children.size();
+    fstreamWrite<size_t>(stream,size);
+
+    for(auto &i : children)
+        i->writeToStream(stream);
+}
+
+void Node::copy(weak_ptr<Node> node){
+    if(auto n = node.lock()){
+        name = n->name;
+        active = n->active;
+        visible = n->visible;
+        for(auto &i : n->children){
+            shared_ptr<Node> result = factory::create(i->getStructId());
+            result->copy(i);
+            addChild(result);
+        }
+    }
+    else{
+        cout << "Node NOT constructed due to invalid pointer.\n";
+    }
 }
 
 Node::~Node(){

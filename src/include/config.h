@@ -1,4 +1,7 @@
-#pragma once
+// #pragma once
+
+#ifndef GVE_CONFIG_H
+#define GVE_CONFIG_H
 
 //sfml includes
 #include <SFML/Graphics.hpp>
@@ -6,18 +9,19 @@
 
 //including other stuff in panic
 #include <iostream>
-#include <windows.h>
 #include <cstdlib>
+// #include <math.h>
 #include <string>
-#include <vector>
+// #include <vector>
 #include <queue>
 #include <map>
 #include <set>
-#include <memory>
+// #include <memory>
 #include <functional>
 #include <thread>
 #include <fstream>
 #include <filesystem>
+#include <locale.h>
 
 #define v2f sf::Vector2f
 #define v3f sf::Vector3f
@@ -31,10 +35,13 @@
 #define mat3 sf::Transform
 
 using std::cin, std::cout,
+    std::fstream,
     std::string,
     std::vector,
+    std::pair,
     std::map,
-    std::set,
+    std::unordered_map,
+    std::unordered_set,
     std::weak_ptr,
     std::shared_ptr,
     std::make_shared,
@@ -42,17 +49,50 @@ using std::cin, std::cout,
     std::thread,
     std::priority_queue;
 
-#include <core/enums.h>
-
-//my includes
-#include <structs/spatial.h>
-
-#include <core/assets.h>
-#include <core/controls.h>
-#include <core/console.h>
-#include <core/viewport.h>
-
 const static int debug_info_z = 9999;
+
+static sf::Color hsv(unsigned int h, unsigned int s = 100, unsigned int v = 100){
+    unsigned int r, g, b;
+    h = h%360;
+    s = s%101;
+    v = v%101;
+    switch(h/60){
+        case 0:
+            r = 255;
+            g = h*255/60;
+            b = 0;
+            break;
+        case 1:
+            r = 255 - ((h - 60)*255/60);
+            g = 255;
+            b = 0;
+            break;
+        case 2:
+            r = 0;
+            g = 255;
+            b = (h-120)*255/60;
+            break;
+        case 3:
+            r = 0;
+            g = 255 - ((h-180)*255/60);
+            b = 255;
+            break;
+        case 4:
+            r = (h-240)*255/60;
+            g = 0;
+            b = 255;
+            break;
+        case 5:
+            r = 255;
+            g = 0;
+            b = 255 - ((h-300)*255/60);
+    }
+    r += (100-s)*(255-r)/100;
+    g += (100-s)*(255-g)/100;
+    b += (100-s)*(255-b)/100;
+
+    return sf::Color(r*v/100,g*v/100,b*v/100);
+}
 
 static inline string prettyBool(bool a){
     return a ? "True" : "False";
@@ -64,8 +104,20 @@ static std::ostream& operator << (std::ostream& s, sf::Vector2<T> v){
     return s;
 }
 
+template <typename T>
+static sf::Vector2<T> operator / (sf::Vector2<T> a, sf::Vector2<T> b){
+    return v2f(a.x / b.x, a.y / b.y);
+}
+
+template <typename T>
+static sf::Vector2<T> operator * (sf::Vector2<T> a, sf::Vector2<T> b){
+    return v2f(a.x * b.x, a.y * b.y);
+}
+
 static std::ostream& operator << (std::ostream& s, mat3 v){
     for(int i = 0; i < 16; i++)
         s << v.getMatrix()[i] << ' ';
     return s;
 }
+
+#endif

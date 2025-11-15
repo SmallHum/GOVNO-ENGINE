@@ -1,0 +1,2 @@
+g++ -c "src/include/imgui/imgui.cpp" "src/include/imgui/imgui_stdlib.cpp" "src/include/imgui/imgui_draw.cpp" "src/include/imgui/imgui_impl_opengl3.cpp" "src/include/imgui/imgui_tables.cpp" "src/include/imgui/imgui_widgets.cpp" "src/include/imgui/imgui-SFML.cpp" -I"SFML-LINUX/include" -I"src/include/imgui" -O2
+pause

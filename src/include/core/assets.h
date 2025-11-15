@@ -1,28 +1,26 @@
-#pragma once
+// #pragma once
+
+#ifndef GVE_ASSETS_H
+#define GVE_ASSETS_H
 
 #include <config.h>
+#include <structs/font.h>
 
 struct Pack{
-    map<string,shared_ptr<sf::Texture>> textures;
-    map<string,shared_ptr<sf::Sprite>> sprites;
-    map<string,shared_ptr<sf::Music>> music;
-    map<string,shared_ptr<sf::SoundBuffer>> sound_buffers;
-    map<string,shared_ptr<sf::Sound>> sfx;
-    map<string,shared_ptr<sf::Font>> fonts;
+    map<string,sf::Texture> textures;
+    map<string,sf::Sprite> sprites;
+    map<string,sf::Music> music;
+    map<string,sf::SoundBuffer> sound_buffers;
+    map<string,sf::Sound> sfx;
+    map<string,GVEFont> fonts;
 
     // Loads independent asset map, from file
     template <typename T>
-    void Pack::loadAsset(map<string, shared_ptr<T>> &assets_list, std::filesystem::path path);
+    void loadAsset(map<string, T> &assets_list, std::filesystem::path path);
 
     // Loads a dependent asset map, from another asset map
     template <typename T, typename Dependency>
-    void Pack::loadAsset(map<string, shared_ptr<T>> &assets_list, map<string,shared_ptr<Dependency>> &d_map);
-
-    weak_ptr<sf::Sprite> getSpr(const string name);
-    weak_ptr<sf::Texture> getTex(const string name);
-    weak_ptr<sf::Music> getMusic(const string name);
-    weak_ptr<sf::Sound> getSfx(const string name);
-    weak_ptr<sf::Font> getFont(const string name);
+    void loadAsset(map<string, T> &assets_list, map<string,Dependency> &d_map, const string prefix_filter = "");
 
 };
 
@@ -34,11 +32,13 @@ namespace assets{
     void loadPack(string pack_name);
     void unloadPack(string pack_name);
 
-    weak_ptr<sf::Sprite> getSp(const string name);
-    weak_ptr<sf::Texture> getT(const string name);
-    weak_ptr<sf::Music> getM(const string name);
-    weak_ptr<sf::Sound> getSf(const string name);
-    weak_ptr<sf::Font> getF(const string name);
+    sf::Sprite &getSp(const string name);
+    sf::Texture &getT(const string name);
+    sf::Music &getM(const string name);
+    sf::Sound &getSf(const string name);
+    GVEFont &getF(const string name);
+
+    string getFontName(GVEFont &font);
 
     void printData();
 };
@@ -48,3 +48,5 @@ namespace assets{
 #define getMusic assets::getM
 #define getSfx assets::getSf
 #define getFont assets::getF
+
+#endif

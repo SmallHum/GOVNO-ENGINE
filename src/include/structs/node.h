@@ -1,6 +1,10 @@
-#pragma once
+// #pragma once
+
+#ifndef GVE_NODE_H
+#define GVE_NODE_H
 
 #include <config.h>
+#include <core/enums.h>
 
 struct Node : std::enable_shared_from_this<Node>{
     vector<shared_ptr<Node>> children;
@@ -8,31 +12,34 @@ struct Node : std::enable_shared_from_this<Node>{
 
     string name;
 
-    //Icon to display in print node tree.
-    char icon;
-
-    //Determines if this tree needs to be processed.
-    //```process``` and ```physProcess``` functions, to be exact.
+    // Determines if this tree needs to be processed.
+    // ```process``` and ```physProcess``` functions, to be exact.
     bool active = 1;
 
-    //Determines if this tree needs to be drawn.
+    // Determines if this tree needs to be drawn.
     bool visible = 1;
 
-    //Index in parent's children array.
-    //Set to ```-1``` by default, or if it has no parent.
+    // Index in parent's children array.
+    // Set to ```-1``` by default, or if it has no parent.
     size_t parent_index = -1;
 
-    Node(string name = "Node");
+    // Empty constructor.
+    Node();
+
+    Node(string name);
 
     void addChild(shared_ptr<Node> node);
+    void addChild(shared_ptr<Node> node, size_t index);
 
     void removeChild(shared_ptr<Node> node);
     void removeChild(size_t index);
 
-    //Struct ID for saving and loading node tree
+    void removeGently();
+
+    // Struct ID for saving and loading node tree
     virtual StructId getStructId();
 
-    //Inherit functions
+    // Inherit functions
 
     virtual void onCreation();
 
@@ -45,12 +52,29 @@ struct Node : std::enable_shared_from_this<Node>{
     virtual void draw();
     virtual void drawDebug();
 
-    //Finds a node in child tree via ```"path/to/the/node"```.
-    //Returns ```nullptr``` if couldn't find the node.
+    // Finds a node in child tree via ```"path/to/the/node"```.
+    // Returns ```nullptr``` if couldn't find the node.
     shared_ptr<Node> find(string path);
 
     void printTree(int spaces = 0);
-    virtual void printInfo(std::ostream& s);
+    // virtual void printInfo(std::ostream& s);
+
+    // Save node tree to file. Usually that's what you'd want to use.
+    // ```writeToStream``` is used for recursive calls.
+    void writeToFile(string file);
+
+    // Inherited function to read everything that isn't ```struct id``` or ```children```;
+    virtual void reader(fstream &stream);
+
+    // Inherited function to write everything that isn't ```struct id``` or ```children```;
+    virtual void writer(fstream &stream);
+    
+    void writeToStream(fstream &stream);
+
+    // Copy tree
+    virtual void copy(weak_ptr<Node> node);
 
     ~Node();
 };
+
+#endif

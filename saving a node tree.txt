@@ -36,5 +36,5 @@ void writedown():
 1	spatial_0\0 1 1 256.f -128.f 0.f 1.f 1.f 0 0 255	0
 1	spatial_1\0 1 1 -256.f 128.f 0.f 1.f 1.f0 255 0 0	0
 1 	spatial_2\0 1 1 480.f 360.f 45.f 1.f 1.f 255 0 0 	2 0 1
-0 	root 1 1 	1 2
+0 	root\0 1 1 	1 2
 
