@@ -1,5 +1,4 @@
 #include <structs/spatial.h>
-#include <core/viewport.h>
 
 Spatial::Spatial(): Node(){
     name = "Spatial";
@@ -54,6 +53,7 @@ v2f Spatial::getGlobalPos(){
 
 void Spatial::drawDebug(){
     Node::drawDebug();
+
     if(debug::show_spatial_name){
         viewport::drawOver(debug::spatial_name(name, debug_color), 1, 0, mat3().translate(getGlobalPos()));
     }

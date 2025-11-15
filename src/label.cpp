@@ -1,5 +1,4 @@
 #include <structs/label.h>
-#include <core/viewport.h>
 
 Label::Label():
     Spatial(),

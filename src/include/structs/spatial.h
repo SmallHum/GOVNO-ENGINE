@@ -4,6 +4,7 @@
 #define GVE_SPATIAL_H
 
 #include <structs/node.h>
+#include <core/viewport.h>
 
 struct Spatial : Node{
     mat3 local_transform;
