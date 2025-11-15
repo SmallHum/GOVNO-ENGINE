@@ -6,11 +6,26 @@
 #include <config.h>
 
 struct DrawInfo{
+
+    // sf::Drawable to draw
     sf::Drawable *d;
+
+    // is that sf::Drawable a copy
+    // if true, that drawable will be deleted.
     bool is_copy;
+
+    // transform. position, rotation, scale
     mat3 transform;
+
+    // Order of drawing
     int z;
+
+    // Should it follow camera
+    // if true, camera transform isn't going to be applied
     bool follow_cam;
+
+    // Rect. Usually it's for sf::Sprite, for sprite sheets for example
+    sf::IntRect rect;
 
     void freeD(){
         if(!is_copy)return;
@@ -81,11 +96,24 @@ namespace viewport{
 
     // A regular drawing function.
     // Draws any ```sf::Drawable``` accounting depth value ```z```
-    void draw(sf::Drawable *d, bool is_copy, bool follow = 0, int z = 0, mat3 transform = mat3());
+    void draw(
+        sf::Drawable *d, 
+        bool is_copy, 
+        bool follow = 0, 
+        int z = 0, 
+        mat3 transform = mat3(), 
+        sf::IntRect rect = sf::IntRect()
+        );
 
     // A drawing function that draws over EVERYTHING
     // Usually it's used for debug info.
-    void drawOver(sf::Drawable *d, bool is_copy, bool follow = 0, mat3 transform = mat3());
+    void drawOver(
+        sf::Drawable *d, 
+        bool is_copy, 
+        bool follow = 0, 
+        mat3 transform = mat3(), 
+        sf::IntRect rect = sf::IntRect()
+        );
 
     void exit();
 };

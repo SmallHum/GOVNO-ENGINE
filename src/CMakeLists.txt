@@ -46,6 +46,7 @@ add_executable(${PROJECT_NAME}
 	assets.cpp 
 	struct_loader.cpp 
 	
+	sprite.cpp 
 	label.cpp 
 	aabb.cpp 
 	spatial.cpp 

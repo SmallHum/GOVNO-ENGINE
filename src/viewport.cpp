@@ -144,9 +144,18 @@ namespace viewport{
             if(!curr.follow_cam)
                 transform = getCamTransform().combine(transform);
             // cout << "trying to draw like for real..." << '\n';
+            
             sf::Sprite *spr = dynamic_cast<sf::Sprite*>(curr.d);
-            // cout << spr;
-            wind.draw(*curr.d, sf::RenderStates(transform));
+            if(spr && curr.rect != sf::IntRect()){
+                sf::IntRect temp = spr->getTextureRect();
+                spr->setTextureRect(curr.rect);
+                wind.draw(*curr.d, sf::RenderStates(transform));
+                spr->setTextureRect(temp);
+            }
+            else{
+                wind.draw(*curr.d, sf::RenderStates(transform));
+            }
+                
             // cout << "trying to free..." << '\n';
             curr.freeD();
             // cout << "trying to pop..." << '\n';
@@ -155,14 +164,14 @@ namespace viewport{
         }
     }
 
-    void draw(sf::Drawable *d, bool is_copy, bool follow, int z, mat3 transform){
+    void draw(sf::Drawable *d, bool is_copy, bool follow, int z, mat3 transform, sf::IntRect rect){
         // cout << "trying to push draw queue...\n";
-        draw_queue.push({d,is_copy, transform, z, follow});
+        draw_queue.push({d,is_copy, transform, z, follow, rect});
     }
 
-    void drawOver(sf::Drawable *d, bool is_copy, bool follow, mat3 transform){
+    void drawOver(sf::Drawable *d, bool is_copy, bool follow, mat3 transform, sf::IntRect rect){
         // cout << "trying to draw over...\n";
-        draw(d,is_copy,follow,debug_info_z,transform);
+        draw(d,is_copy,follow,debug_info_z,transform, rect);
     }
 
     void exit(){

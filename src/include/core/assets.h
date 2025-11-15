@@ -27,6 +27,8 @@ struct Pack{
 namespace assets{
     extern map<string,Pack> packs;
 
+    extern std::exception not_found_exception;
+
     void init();
 
     void loadPack(string pack_name);
@@ -39,6 +41,7 @@ namespace assets{
     GVEFont &getF(const string name);
 
     string getFontName(GVEFont &font);
+    string getSpriteName(sf::Sprite &sprite);
 
     void printData();
 };

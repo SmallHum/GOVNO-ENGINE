@@ -60,7 +60,7 @@ Val &find(map<Key, Val> &map, Key key){
     auto result = map.find(key);
     if(result == map.end()){
         cout << "Value by key " << key << "not found.\n";
-        throw std::exception();
+        throw assets::not_found_exception;
     }
     return result->second;
 }
@@ -68,8 +68,11 @@ Val &find(map<Key, Val> &map, Key key){
 namespace assets{
     std::map<std::string,Pack> packs;
 
+    std::exception not_found_exception;
+
     void init(){
         loadPack("main");
+        not_found_exception = std::exception();
         // setlocale(LC_ALL, "Rus");
 
         // NO WINDOWS ANYMORE HAHA
@@ -169,6 +172,17 @@ namespace assets{
             for(auto &j : i.second.fonts){
                 // cout << &j.second.atlas << ' ' << &font.atlas;
                 if(&j.second.atlas != &font.atlas)continue;
+                return i.first + ":" + j.first;
+            }
+        }
+
+        return "";
+    }
+    string getSpriteName(sf::Sprite &sprite){
+        for(auto &i : packs){
+            for(auto &j : i.second.sprites){
+                // cout << &j.second.atlas << ' ' << &font.atlas;
+                if(&j.second != &sprite)continue;
                 return i.first + ":" + j.first;
             }
         }

@@ -8,6 +8,7 @@ namespace factory{
         factory::reg<Spatial>(StructId::Spatial);
         factory::reg<AABB>(StructId::AABB);
         factory::reg<Label>(StructId::Label);
+        factory::reg<Sprite>(StructId::Sprite);
     }
 
     shared_ptr<Node> create(const StructId& id){

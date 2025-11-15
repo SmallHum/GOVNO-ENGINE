@@ -5,6 +5,7 @@
 
 #include <structs/aabb.h>
 #include <structs/label.h>
+#include <structs/sprite.h>
 
 namespace factory{
     extern unordered_map<StructId, function<shared_ptr<Node>()>> creators;

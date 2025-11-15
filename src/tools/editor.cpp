@@ -247,59 +247,98 @@ namespace editor{
         node_root->writeToFile(path);
     }
 
-    void editFieldBool(string label, bool &v){
-        ImGui::Checkbox(label.c_str(), &v);
+    bool editFieldBool(string label, bool &v){
+        return ImGui::Checkbox(label.c_str(), &v);
     }
 
-    void editFieldFloat(string label, float &v){
+    bool editFieldFloat(string label, float &v){
         float buffer = v;
 
         if(!ImGui::InputFloat(label.c_str(), &buffer))
-            return;
+            return false;
 
         if(!PRESSED(ImGuiKey_Enter))
-            return;
+            return false;
 
         cout << "    applying " << label << '\n';
         v = buffer;
+
+        return true;
     }
 
-    void editFieldV2F(string label, v2f &v){
+    bool editFieldV2F(string label, v2f &v){
         float buffer[2] = {v.x, v.y};
 
         if(!ImGui::InputFloat2(label.c_str(), buffer))
-            return;
+            return false;
         if(!PRESSED(ImGuiKey_Enter))
-            return;
+            return false;
 
         cout << "    applying " << label << '\n';
         v.x = buffer[0];
         v.y = buffer[1];
+
+        return true;
     }
 
-    void editFieldString(string label, string &v, bool multiline = 0){
+    bool editFieldString(string label, string &v, bool multiline = 0){
         string buffer = v;
 
         // ImGui::PushID(id_fix++);
         if(multiline){
             if(!ImGui::InputTextMultiline(label.c_str(), &buffer))
-                return;
+                return false;
         }else if(!ImGui::InputText(label.c_str(), &buffer))
-                return;
+                return false;
         // ImGui::PopID();
         
         if(!PRESSED(ImGuiKey_Enter))
-                return;
+                return false;
 
         cout << "    applying " << label << '\n';
         v.resize(strlen(buffer.c_str()));
         v = buffer;
+
+        return true;
+    }
+
+    bool editFieldSprite(sf::Sprite *&sprite){
+        string buffer = assets::getSpriteName(*sprite);
+        if(!editFieldString("Sprite", buffer))
+            return 0;
+        
+        cout << "    applying sprite for real now" << '\n';
+        try{
+            sprite = &getSprite(buffer);
+        }
+        catch(...){}
+        return true;
+    }
+
+    bool editFieldFont(GVEFont *&font){
+        string buffer = assets::getFontName(*font);
+        if(!editFieldString("Font", buffer))
+            return 0;
+        
+        cout << "    applying font for real now" << '\n';
+        try{
+            font = &getFont(buffer);
+        }
+        catch(...){}
+        return true;
+    }
+
+    void SpriteEditMenu(Sprite *node){
+        ImGui::SeparatorText("Sprite");
+
+        editFieldSprite(node->anim.sheet);
     }
 
     void LabelEditMenu(Label *node){
         ImGui::SeparatorText("Label");
 
         editFieldString("Text", node->text, true);
+        editFieldFont(node->font);
     }
 
     void AABBEditMenu(AABB *node){
@@ -323,6 +362,9 @@ namespace editor{
 
         auto label = dynamic_cast<Label*>(node);
         if(label)LabelEditMenu(label);
+
+        auto sprite = dynamic_cast<Sprite*>(node);
+        if(sprite)SpriteEditMenu(sprite);
     }
 
     void nodeEditMenu(Node *node){
