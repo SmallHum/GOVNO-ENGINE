@@ -108,7 +108,9 @@ namespace editor{
             }
 
             void execute() override{
+                // cout << "action execute begins\n";
                 parent->removeChild(selected_on_action);
+                // cout << "called removechild succesfully\n";
 
                 selection.reset();
             }
@@ -266,6 +268,21 @@ namespace editor{
         return true;
     }
 
+    bool editFieldInt(string label, int &v){
+        int buffer = v;
+
+        if(!ImGui::InputInt(label.c_str(), &buffer))
+            return false;
+
+        if(!PRESSED(ImGuiKey_Enter))
+            return false;
+
+        cout << "    applying " << label << '\n';
+        v = buffer;
+
+        return true;
+    }
+
     bool editFieldV2F(string label, v2f &v){
         float buffer[2] = {v.x, v.y};
 
@@ -328,10 +345,15 @@ namespace editor{
         return true;
     }
 
+    bool sprite_edit_window_open = false;
     void SpriteEditMenu(Sprite *node){
         ImGui::SeparatorText("Sprite");
 
-        editFieldSprite(node->anim.sheet);
+        // editFieldSprite(node->anim.sheet);
+        editFieldInt("Z", node->z);
+        if(ImGui::Button("Edit Animations")){
+            sprite_edit_window_open = true;
+        }
     }
 
     void LabelEditMenu(Label *node){
@@ -394,20 +416,20 @@ namespace editor{
 
     void feedEvent(const std::optional<sf::Event> &ev){
         if(const auto* e = ev->getIf<sf::Event::MouseWheelScrolled>()){
-                float d = e->delta;
-                if(CTRL_DOWN){
-                    v2f old_global_cursor_pos = viewport::getGlobalCursorPos();
-                    viewport::zoom *= (d == 1.f ? 1.1 : 0.9090);
-                    cout << d << '\n';
-                    if(viewport::zoom >= 0.1f && viewport::zoom <= 10.f)
-                        cam_pos += old_global_cursor_pos - viewport::getGlobalCursorPos();
-                    cout << viewport::cam_pos << '\n';
-                    return;
-                }
-                if(e->wheel == sf::Mouse::Wheel::Horizontal || SHIFT_AND(e->wheel == sf::Mouse::Wheel::Vertical))
-                    editor::wheel_delta_x = d/viewport::zoom;
-                if(e->wheel == sf::Mouse::Wheel::Vertical && !SHIFT_DOWN)
-                    editor::wheel_delta_y = d/viewport::zoom;
+            float d = e->delta;
+            if(CTRL_DOWN){
+                v2f old_global_cursor_pos = viewport::getGlobalCursorPos();
+                viewport::zoom *= (d == 1.f ? 1.1 : 0.9090);
+                cout << d << '\n';
+                if(viewport::zoom >= 0.1f && viewport::zoom <= 10.f)
+                    cam_pos += old_global_cursor_pos - viewport::getGlobalCursorPos();
+                cout << viewport::cam_pos << '\n';
+                return;
+            }
+            if(e->wheel == sf::Mouse::Wheel::Horizontal || SHIFT_AND(e->wheel == sf::Mouse::Wheel::Vertical))
+                editor::wheel_delta_x = d/viewport::zoom;
+            if(e->wheel == sf::Mouse::Wheel::Vertical && !SHIFT_DOWN)
+                editor::wheel_delta_y = d/viewport::zoom;
         }
     }
 
@@ -565,6 +587,73 @@ namespace editor{
 
             ImGui::End();
         }
+
+        if(!(sprite_edit_window_open && 
+            ImGui::Begin(
+                "Edit Animations", 
+                &sprite_edit_window_open, 
+                ImGuiWindowFlags_HorizontalScrollbar
+                ))
+        )return;
+        
+        // cout << "trying to dynamic cast...\n";
+        Sprite *s = dynamic_cast<Sprite*>(selection.get());
+        // cout << "casted\n";
+
+        if(!s){
+            ImGui::End();
+            return;
+        }
+
+        // cout << "is s\n";
+
+        if(ImGui::Button("Add Animation")){
+            s->anim.push_back(Animation());
+        }
+        // cout << "added animation\n";
+
+        if(s->anim.empty()){
+            ImGui::End();
+            return;
+        }
+        // cout << "isnt empty\n";
+
+        ImGui::SameLine();
+
+        string items; size_t n = 0;
+        for(auto &i : s->anim)
+            items += "Anim" + std::to_string(n++) + '\0';
+        items += '\0';
+        int curr_item = s->current_animation_index;
+        Animation *curr_anim = &s->anim[curr_item];
+        // cout << "items composed\n";
+
+        ImGui::SameLine();
+
+        ImGui::SetNextItemWidth(128.f);
+        if(ImGui::Combo("Animations", &curr_item, items.c_str())){
+            s->current_animation_index = curr_item;
+            curr_anim = &s->anim[curr_item];
+        }
+
+        ImGui::SameLine();
+        
+        ImGui::SetNextItemWidth(128.f);
+        editFieldFloat("FPS", curr_anim->fps);
+
+        ImGui::SameLine();
+
+        ImGui::SetNextItemWidth(128.f);
+        editFieldSprite(curr_anim->sheet);
+        
+        if(curr_anim->sheet){
+            if(ImGui::BeginChild(12312456)){
+                ImGui::Image(*curr_anim->sheet);
+                ImGui::EndChild();
+            }
+        }
+
+        ImGui::End();
     } // void editProc(float &dt)
 
     void toolsList(float &dt){
@@ -653,7 +742,7 @@ int main(){
     float dt = 1.f/60.f;
 
     ImGuiIO& io = ImGui::GetIO();
-    ImFont *def = io.Fonts->AddFontFromFileTTF("assets/main/fonts/courier.ttf", 20.f);
+    ImFont *def = io.Fonts->AddFontFromFileTTF("assets/main/fonts/courier.ttf", 20.f, NULL, io.Fonts->GetGlyphRangesCyrillic());
 
     bool result = ImGui::SFML::UpdateFontTexture();
     if(!result){

@@ -4,6 +4,8 @@ Sprite::Sprite():
     Spatial()
 {
     name = "Sprite";
+    anim.push_back(Animation());
+    current_animation_index = z = 0;
 }
 
 Sprite::Sprite(
@@ -21,10 +23,10 @@ Sprite::Sprite(
         scale,
         debug_color
         ),
-    anim(anim),
     z(z)
 {
-
+    this->anim.push_back(anim);
+    current_animation_index = 0;
 }
 
 StructId Sprite::getStructId(){

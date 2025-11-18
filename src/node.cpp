@@ -39,17 +39,23 @@ void Node::addChild(shared_ptr<Node> node, size_t index){
 }
 
 void Node::removeChild(shared_ptr<Node> node){
+    // cout << "removeChild beginning\n";
     size_t n = children.size();
     for(int i = 0; i < n; i++)
-        if(node == children[i])
+        if(node == children[i]){
+            // cout << "found at " << i << '\n';
             removeChild(i);
+            return;
+        }
 }
 
 void Node::removeChild(size_t index){
     if(index >= children.size())return;
     children[index]->parent.reset();
+    // cout << "trying to call vector erase\n";
     children.erase(children.begin() + index);
 
+    // cout << "trying to decrease parent indexes\n";
     for(size_t i = index; i < children.size(); i++)
         children[i]->parent_index--;
 }

@@ -21,6 +21,8 @@ struct Animation{
     float time;
     float fps;
 
+    bool playing = false;
+
     Animation():
         fps(0.f),
         sheet(nullptr)
@@ -65,12 +67,31 @@ struct Animation{
         this->fps = fps;
     }
 
-    void tickFrame(float dt){
-        time += dt*fps;
+    inline void tickFrame(float dt){
+        if(playing)
+            time += dt*fps;
     }
 
-    void setFrame(int fr){
+    inline void setFrame(int fr){
         time = fr;
+    }
+
+    inline void play(){
+        playing = true;
+    }
+
+    inline void pause(){
+        playing = false;
+    }
+
+    inline void stop(){
+        setFrame(0);
+        pause();
+    }
+
+    inline void reset(){
+        setFrame(0);
+        play();
     }
 
     const v2f getOrigin(){
@@ -87,7 +108,9 @@ struct Animation{
 
 struct Sprite : Spatial{
     
-    Animation anim;
+    vector<Animation> anim;
+
+    size_t current_animation_index = -1;
     // Depth value used to specify the order of drawn sprites.
     int z;
 
@@ -105,17 +128,39 @@ struct Sprite : Spatial{
 
     virtual StructId getStructId() override;
 
+    const Animation &getCurrAnimation(){
+        if(anim.empty()){
+            cout << "No animations are present the hell are you trying to do (Animation::getCurrentAnimation)";
+            throw std::exception();
+        }
+        return anim[current_animation_index];
+    }
+
+    void setCurrAnimation(size_t animation_index, bool reset_previous = false, bool reset_new = false){
+        if(reset_previous){
+            if(anim.empty())
+                return;
+            anim[current_animation_index].reset();
+        }
+        if(reset_new){
+            anim[animation_index].reset();
+        }
+        current_animation_index = animation_index;
+    }
+
     // virtual void drawDebug() override;
     virtual void draw() override{
+        auto a = getCurrAnimation();
+
         Spatial::draw();
-        if(!anim.sheet)return;
+        if(!a.sheet)return;
 
         cout << "calling viewport::draw...\n";
 
         viewport::draw(
-            anim.sheet, 0, 0, z, 
-            getGlobalTransform().translate(-anim.getOrigin()), 
-            anim.getRect()
+            a.sheet, 0, 0, z, 
+            getGlobalTransform().translate(-a.getOrigin()), 
+            a.getRect()
         );
         cout << "success\n";
     }
@@ -127,22 +172,26 @@ struct Sprite : Spatial{
 
         z = fstreamRead<int>(stream);
 
-        anim = Animation();
+        size_t anims_count = fstreamRead<size_t>(stream);
+        anim = vector<Animation>(anims_count);
+        for(size_t i = 0; i < anims_count; i++){
+            Animation &a = anim[i];
 
-        string sprite_name = fstreamRead(stream);
-        anim.sheet = &getSprite(sprite_name);
+            string sprite_name = fstreamRead(stream);
+            a.sheet = &getSprite(sprite_name);
 
-        anim.fps = fstreamRead<float>(stream);
+            a.fps = fstreamRead<float>(stream);
 
-        size_t frames_count = fstreamRead<size_t>(stream);
+            size_t frames_count = fstreamRead<size_t>(stream);
 
-        anim.frame_origins = vector<v2f>(frames_count);
-        anim.frame_rects = vector<sf::IntRect>(frames_count);
+            a.frame_origins = vector<v2f>(frames_count);
+            a.frame_rects = vector<sf::IntRect>(frames_count);
 
-        for(size_t i = 0; i < frames_count; i++){
-            anim.frame_rects[i].position = fstreamReadV2i(stream);
-            anim.frame_rects[i].size = fstreamReadV2i(stream);
-            anim.frame_origins[i] = fstreamReadV2f(stream);
+            for(size_t i = 0; i < frames_count; i++){
+                a.frame_rects[i].position = fstreamReadV2i(stream);
+                a.frame_rects[i].size = fstreamReadV2i(stream);
+                a.frame_origins[i] = fstreamReadV2f(stream);
+            }
         }
     }
     virtual void writer(fstream &stream) override{
@@ -150,19 +199,26 @@ struct Sprite : Spatial{
 
         fstreamWrite<int>(stream, z);
 
-        string sprite_name = assets::getSpriteName(*anim.sheet);
-        fstreamWrite(stream, sprite_name);
+        size_t anims_count = anim.size();
+        fstreamWrite(stream, anims_count);
 
-        fstreamWrite(stream, anim.fps);
+        for(auto &a: anim){
+            string sprite_name = assets::getSpriteName(*a.sheet);
+            fstreamWrite(stream, sprite_name);
 
-        size_t frames_count = anim.frame_rects.size();
-        fstreamWrite(stream, frames_count);
+            fstreamWrite(stream, a.fps);
 
-        for(size_t i = 0; i < frames_count; i++){
-            fstreamWriteV2i(stream, anim.frame_rects[i].position);
-            fstreamWriteV2i(stream, anim.frame_rects[i].size);
-            fstreamWriteV2f(stream, anim.frame_origins[i]);
+            size_t frames_count = a.frame_rects.size();
+            fstreamWrite(stream, frames_count);
+
+            for(size_t i = 0; i < frames_count; i++){
+                fstreamWriteV2i(stream, a.frame_rects[i].position);
+                fstreamWriteV2i(stream, a.frame_rects[i].size);
+                fstreamWriteV2f(stream, a.frame_origins[i]);
+            }
         }
+
+        
     }
     
     // virtual void printInfo(std::ostream& s) override;
