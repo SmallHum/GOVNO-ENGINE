@@ -36,7 +36,7 @@ struct Spatial : Node{
 
     virtual void drawDebug() override;
 
-    virtual void process() override;
+    virtual void process(const float &delta) override;
 
     virtual void reader(fstream &stream) override;
     virtual void writer(fstream &stream) override;

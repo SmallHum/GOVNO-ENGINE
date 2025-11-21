@@ -43,9 +43,8 @@ struct Node : std::enable_shared_from_this<Node>{
 
     virtual void onCreation();
 
-    virtual void process();
-
-    virtual void physProcess(float delta);
+    virtual void process(const float &delta);
+    virtual void physProcess(const float &delta);
 
     virtual void onDeletion();
 

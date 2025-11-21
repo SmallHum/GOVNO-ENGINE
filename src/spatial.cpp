@@ -63,9 +63,9 @@ void Spatial::drawDebug(){
     }
 }
 
-void Spatial::process(){
+void Spatial::process(const float &delta){
     updateTransform();
-    Node::process();
+    Node::process(delta);
 }
 
 void Spatial::reader(fstream &stream){

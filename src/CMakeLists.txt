@@ -64,3 +64,26 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 	"../../build/_deps/imgui-src" 
 	"../../build/_deps/imgui-sfml-src" 
 	)
+
+add_executable(gve-app
+	main.cpp 
+	
+	viewport.cpp 
+	assets.cpp 
+	struct_loader.cpp 
+	
+	sprite.cpp 
+	label.cpp 
+	aabb.cpp 
+	spatial.cpp 
+	node.cpp 
+
+	fstream_opers.cpp 
+	controls.cpp
+	)
+
+target_link_libraries(gve-app PUBLIC SFML::Graphics SFML::Window SFML::System SFML::Audio)
+target_include_directories(gve-app PUBLIC 
+	"include"
+	"../../build/_deps/sfml-src/include"
+	)

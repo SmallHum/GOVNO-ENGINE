@@ -31,7 +31,7 @@ struct AABB: Spatial{
 
     virtual void drawDebug() override;
 
-    virtual void process() override;
+    // virtual void process() override;
 
     virtual void reader(fstream &stream) override;
     virtual void writer(fstream &stream) override;

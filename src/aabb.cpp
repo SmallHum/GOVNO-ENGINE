@@ -74,9 +74,9 @@ void AABB::drawDebug(){
     }
 }
 
-void AABB::process(){
-    Spatial::process();
-}
+// void AABB::process(){
+//     Spatial::process();
+// }
 
 void AABB::reader(fstream &stream){
     Spatial::reader(stream);

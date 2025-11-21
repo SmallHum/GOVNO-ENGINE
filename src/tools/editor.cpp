@@ -27,7 +27,51 @@
 using ImGui::MenuItem,
         ImGui::Separator;
 
+// unsigned char map_208[256];
+// unsigned char map_209[256];
+// void init_map(){
+//     map_208[129] = 
+// }
+
+string UTF8toCP1251(string s){
+    string result;
+
+    for(size_t i = 0; i < s.size(); i++){
+        unsigned char c = (unsigned char)s[i];
+        if(c == 208){
+            i++;
+            result += s[i] + 48;
+        }
+        else if(c == 209){
+            i++;
+            result += s[i] + 48;
+        }
+        else{
+            result += s[i];
+        }
+    }
+
+    return result;
+}
+
 namespace editor{
+
+    // struct PopupWindow{
+    //     bool is_open = 0;
+
+    //     bool beginWin()
+
+    //     void process(){
+    //         if(!is_open)
+    //         return;
+
+
+    //     }
+
+    //     void open(){
+
+    //     }
+    // }
 
     shared_ptr<Node> node_root;
     shared_ptr<Node> selection;
@@ -298,7 +342,7 @@ namespace editor{
         return true;
     }
 
-    bool editFieldString(string label, string &v, bool multiline = 0){
+    bool editFieldString(string label, string &v, bool multiline = 0, bool cp1251 = false){
         string buffer = v;
 
         // ImGui::PushID(id_fix++);
@@ -313,8 +357,15 @@ namespace editor{
                 return false;
 
         cout << "    applying " << label << '\n';
+        if(cp1251)
+            buffer = UTF8toCP1251(buffer);
         v.resize(strlen(buffer.c_str()));
         v = buffer;
+
+        // cout << '\n';
+        // for(auto &c : v)
+        //     cout << (int)(unsigned char)c << ' ';
+        // cout << '\n';
 
         return true;
     }
@@ -359,7 +410,8 @@ namespace editor{
     void LabelEditMenu(Label *node){
         ImGui::SeparatorText("Label");
 
-        editFieldString("Text", node->text, true);
+        editFieldInt("Z", node->z);
+        editFieldString("Text", node->text, true, true);
         editFieldFont(node->font);
     }
 
@@ -433,13 +485,17 @@ namespace editor{
         }
     }
 
+    bool isIntersecting(v2f a, v2f b){
+        return (a-b).length() <= sel_margin;
+    }
+
     shared_ptr<Node> getHovered(shared_ptr<Node> root, size_t depth = 0){
         Spatial *sp = dynamic_cast<Spatial *>(root.get());
 
         if(sp && selection_depth < depth){
             v2f m = viewport::getGlobalCursorPos();
             // cout << m << '\n';
-            if((m - sp->getGlobalPos()).length() <= sel_margin){
+            if(isIntersecting(m, sp->getGlobalPos())){
                 selection_depth = depth + 1;
                 return root;
             }
@@ -569,6 +625,8 @@ namespace editor{
         
     } // void treeViewProc(float &dt)
 
+    v2f box_size, origin;
+    size_t curr_frame = 0;
     void editProc(float &dt){
         edit_pos_x = viewport::wind.getSize().x - edit_width;
 
@@ -607,9 +665,10 @@ namespace editor{
 
         // cout << "is s\n";
 
-        if(ImGui::Button("Add Animation")){
+        if(ImGui::Button("Add")){
             s->anim.push_back(Animation());
         }
+
         // cout << "added animation\n";
 
         if(s->anim.empty()){
@@ -617,8 +676,6 @@ namespace editor{
             return;
         }
         // cout << "isnt empty\n";
-
-        ImGui::SameLine();
 
         string items; size_t n = 0;
         for(auto &i : s->anim)
@@ -629,14 +686,21 @@ namespace editor{
         // cout << "items composed\n";
 
         ImGui::SameLine();
-
-        ImGui::SetNextItemWidth(128.f);
-        if(ImGui::Combo("Animations", &curr_item, items.c_str())){
-            s->current_animation_index = curr_item;
-            curr_anim = &s->anim[curr_item];
+        if(ImGui::Button("Delete") && s->anim.size() > 1){
+            s->anim.erase(s->anim.begin() + curr_item);
         }
 
         ImGui::SameLine();
+
+        ImGui::SetNextItemWidth(128.f);
+        ImGui::PushID(id_fix++);
+        if(ImGui::Combo("", &curr_item, items.c_str())){
+            s->current_animation_index = curr_item;
+            curr_anim = &s->anim[curr_item];
+        }
+        ImGui::PopID();
+
+        // ImGui::SameLine();
         
         ImGui::SetNextItemWidth(128.f);
         editFieldFloat("FPS", curr_anim->fps);
@@ -645,13 +709,89 @@ namespace editor{
 
         ImGui::SetNextItemWidth(128.f);
         editFieldSprite(curr_anim->sheet);
+
+        if(ImGui::Button("Play"))
+            curr_anim->play();
+        ImGui::SameLine();
+        if(ImGui::Button("Pause"))
+            curr_anim->pause();
+        ImGui::SameLine();
+        if(ImGui::Button("Stop"))
+            curr_anim->stop();
         
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(128.f);
+        editFieldFloat("Frame", curr_anim->time);
+        
+        
+        ImVec2 image_cursor = ImGui::GetCursorPos();
         if(curr_anim->sheet){
-            if(ImGui::BeginChild(12312456)){
+            // if(ImGui::BeginChild(12312456)){
                 ImGui::Image(*curr_anim->sheet);
-                ImGui::EndChild();
-            }
+                // ImGui::EndChild();
+            // }
         }
+
+        size_t frame_n = curr_anim->frame_origins.size();
+
+        if(curr_frame >= frame_n)
+            curr_frame = 0;
+
+        for(size_t i = 0; i < frame_n; i++){
+            ImGui::PushID(id_fix++);
+            if(ImGui::Button("", {24,24}))
+                // cout << frame_n << '\n';
+                curr_frame = i;
+            ImGui::PopID();
+
+            
+            if(i != frame_n - 1)
+                ImGui::SameLine();
+
+            auto curr_origin = curr_anim->frame_origins[i];
+            auto curr_rect = curr_anim->frame_rects[i];
+
+            sf::FloatRect f = {
+                v2f(curr_rect.position), 
+                v2f(curr_rect.size)
+            };
+            sf::FloatRect p = {
+                curr_origin - v2f(2.f, 2.f) + v2f(curr_rect.position), 
+                {4.f, 4.f}
+            };
+            sf::Color c = curr_frame == i ? sf::Color::Yellow : sf::Color::Red;
+
+            ImVec2 temp = ImGui::GetCursorPos();
+            ImGui::SetCursorPos(image_cursor);
+            ImGui::DrawRect(f, c, 0.f, 0.f);
+            ImGui::SetCursorPos(image_cursor);
+            ImGui::DrawRect(p, c, 0.f, 0.f);
+            ImGui::SetCursorPos(temp);
+
+            auto mousepos = v2f(sf::Mouse::getPosition(viewport::wind));
+            if(
+                ImGui::IsMouseClicked(ImGuiMouseButton_Left)
+                && 
+                (
+                    isIntersecting(mousepos, p.position + v2f(2.f,2.f))
+                    || isIntersecting(mousepos, v2f(curr_rect.position) + v2f(image_cursor.x, image_cursor.y))
+                    || isIntersecting(mousepos, v2f(curr_rect.position) + v2f(0.f,curr_rect.size.y) + v2f(image_cursor.x, image_cursor.y))
+                    || isIntersecting(mousepos, v2f(curr_rect.position) + v2f(curr_rect.size.x, 0.f) + v2f(image_cursor.x, image_cursor.y))
+                    || isIntersecting(mousepos, v2f(curr_rect.position + curr_rect.size) + v2f(image_cursor.x, image_cursor.y))
+                )
+            )
+                curr_frame = i;
+            
+            
+        }
+
+        ImGui::SetNextItemWidth(256.f);
+        editFieldV2F("Box size", box_size);
+        ImGui::SetNextItemWidth(256.f);
+        editFieldV2F("Origin", origin);
+
+        if(ImGui::Button("Generate Frames") && box_size != v2f())
+            curr_anim->generate(v2i(box_size), origin);
 
         ImGui::End();
     } // void editProc(float &dt)
@@ -776,7 +916,7 @@ int main(){
         //render
 
         // cout << "node processing...\n";
-        editor::node_root->process();
+        editor::node_root->process(dt);
         // cout << "node drawing...\n";
         editor::node_root->draw();
         // cout << "node debug drawing...\n";

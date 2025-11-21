@@ -104,13 +104,13 @@ void Node::printTree(int spaces){
 
 void Node::onCreation(){}
 
-void Node::process(){
+void Node::process(const float &delta){
     for(auto& i : children)
         if(i->active)
-            i->process();
+            i->process(delta);
 }
 
-void Node::physProcess(float delta){
+void Node::physProcess(const float &delta){
     for(auto& i : children)
         if(i->active)
             i->physProcess(delta);

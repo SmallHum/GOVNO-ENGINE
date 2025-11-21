@@ -1,7 +1,6 @@
 #include <core/controls.h>
 #include <core/assets.h>
 #include <core/viewport.h>
-#include <struct_loader.h>
 
 #include <struct_loader.h>
 
@@ -40,17 +39,18 @@ int main(){
             if(ev->is<sf::Event::Closed>()){
                 exit();
             }
+            controls::feedEvent(ev);
         }
-        updateControls();
 
         //physics
+        // viewport::bg_color = editor::any_editor_window_focused ? sf::Color(63,63,0) : sf::Color::Black;
 
-        //render
-
-        root->process();
+        root->process(dt);
+        root->physProcess(dt);
         root->draw();
         root->drawDebug();
-
+        // cout << "displaying...\n";
+        // cout << viewport::draw_queue.size();
         viewport::display(dt);
         viewport::wind.display();
 

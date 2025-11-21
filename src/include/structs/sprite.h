@@ -50,21 +50,25 @@ struct Animation{
         time(0.f),
         sheet(sheet){
 
+        generate(size, origin);
+
+        this->fps = fps;
+    }
+
+    inline void generate(v2i size, v2f origin){
+        frame_origins.clear();
+        frame_rects.clear();
+        
         const sf::IntRect &sheet_rect = sheet->getTextureRect();
 
         int w = sheet_rect.size.x/size.x, h = sheet_rect.size.y/size.y;
 
-        frame_origins.push_back(origin);
-
-        // std::cout << sheet_rect.size.x << ' ' << size.x << '\n';
-
         for(int yi = 0; yi < h; yi++){
             for(int xi = 0; xi < w; xi++){
+                frame_origins.push_back(origin);
                 frame_rects.push_back(sf::IntRect(v2i(xi*size.x,yi*size.y),size));
             }
         }
-
-        this->fps = fps;
     }
 
     inline void tickFrame(float dt){
@@ -128,7 +132,7 @@ struct Sprite : Spatial{
 
     virtual StructId getStructId() override;
 
-    const Animation &getCurrAnimation(){
+    Animation &getCurrAnimation(){
         if(anim.empty()){
             cout << "No animations are present the hell are you trying to do (Animation::getCurrentAnimation)";
             throw std::exception();
@@ -148,6 +152,12 @@ struct Sprite : Spatial{
         current_animation_index = animation_index;
     }
 
+    virtual void process(const float &delta) override{
+        Spatial::process(delta);
+        if(current_animation_index != -1)
+            getCurrAnimation().tickFrame(delta);
+    }
+
     // virtual void drawDebug() override;
     virtual void draw() override{
         auto a = getCurrAnimation();
@@ -155,14 +165,14 @@ struct Sprite : Spatial{
         Spatial::draw();
         if(!a.sheet)return;
 
-        cout << "calling viewport::draw...\n";
+        // cout << "calling viewport::draw...\n";
 
         viewport::draw(
             a.sheet, 0, 0, z, 
             getGlobalTransform().translate(-a.getOrigin()), 
             a.getRect()
         );
-        cout << "success\n";
+        // cout << "success\n";
     }
 
     // virtual void process() override;
