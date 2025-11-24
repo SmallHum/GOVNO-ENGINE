@@ -24,6 +24,10 @@
 #define SHIFT_AND(COND) (SHIFT_DOWN && (COND))
 #define CTRL_AND(COND) (CTRL_DOWN && (COND))
 
+#define LMB ImGui::IsMouseClicked(ImGuiMouseButton_Left)
+
+#define APPLY (PRESSED(ImGuiKey_Enter) || LMB)
+
 using ImGui::MenuItem,
         ImGui::Separator;
 
@@ -163,6 +167,31 @@ namespace editor{
             }
         };
 
+        template <typename T>
+        struct Apply: OnANode{
+            T before;
+            T after;
+            T &link;
+
+            Apply(
+                T before,
+                T after,
+                T &link,
+                shared_ptr<Node> selected_on_action = selection
+            ): OnANode(selected_on_action),
+            before(before),
+            after(after),
+            link(link)
+            {}
+
+            void execute(){
+                link = after;
+            }
+            void undo(){
+                link = before;
+            }
+        };
+
         size_t history_size;
         Action **undo_data,
                 **redo_data;
@@ -293,6 +322,24 @@ namespace editor{
         node_root->writeToFile(path);
     }
 
+    template<typename T>
+    bool apply(
+        const string &label, T &v, const T &buffer
+        // const function<void(T&, const K&)> applier = [](T &v, const K &buffer){
+        //     v = buffer;
+        // }
+    ){
+        if(!APPLY)
+            return false;
+
+        
+        cout << "applying " << label << "...\n";
+        // applier(v, buffer);
+        history::act(new history::Apply<T>(v, buffer, v));
+
+        return true;
+    }
+
     bool editFieldBool(string label, bool &v){
         return ImGui::Checkbox(label.c_str(), &v);
     }
@@ -303,13 +350,7 @@ namespace editor{
         if(!ImGui::InputFloat(label.c_str(), &buffer))
             return false;
 
-        if(!PRESSED(ImGuiKey_Enter))
-            return false;
-
-        cout << "    applying " << label << '\n';
-        v = buffer;
-
-        return true;
+        return apply(label, v, buffer);
     }
 
     bool editFieldInt(string label, int &v){
@@ -318,13 +359,7 @@ namespace editor{
         if(!ImGui::InputInt(label.c_str(), &buffer))
             return false;
 
-        if(!PRESSED(ImGuiKey_Enter))
-            return false;
-
-        cout << "    applying " << label << '\n';
-        v = buffer;
-
-        return true;
+        return apply(label, v, buffer);
     }
 
     bool editFieldV2F(string label, v2f &v){
@@ -332,14 +367,8 @@ namespace editor{
 
         if(!ImGui::InputFloat2(label.c_str(), buffer))
             return false;
-        if(!PRESSED(ImGuiKey_Enter))
-            return false;
-
-        cout << "    applying " << label << '\n';
-        v.x = buffer[0];
-        v.y = buffer[1];
-
-        return true;
+        
+        return apply(label, v, v2f(buffer[0], buffer[1]));
     }
 
     bool editFieldString(string label, string &v, bool multiline = 0, bool cp1251 = false){
@@ -352,22 +381,18 @@ namespace editor{
         }else if(!ImGui::InputText(label.c_str(), &buffer))
                 return false;
         // ImGui::PopID();
-        
-        if(!PRESSED(ImGuiKey_Enter))
-                return false;
 
-        cout << "    applying " << label << '\n';
-        if(cp1251)
-            buffer = UTF8toCP1251(buffer);
-        v.resize(strlen(buffer.c_str()));
-        v = buffer;
+        // if(cp1251)
+        //     buffer = UTF8toCP1251(buffer);
 
-        // cout << '\n';
-        // for(auto &c : v)
-        //     cout << (int)(unsigned char)c << ' ';
-        // cout << '\n';
+        // return apply(label, v, buffer,
+        //     {[](string &v, const string &buffer){
+        //         v.resize(strlen(buffer.c_str()));
+        //         v = buffer;
+        //     }}
+        // );
 
-        return true;
+        return apply(label, v, buffer);
     }
 
     bool editFieldSprite(sf::Sprite *&sprite){
