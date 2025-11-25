@@ -8,12 +8,18 @@ namespace debug{
          show_spatial_origin = 0,
          show_picked_node_info = 0,
          show_sprite_bounds = 0,
-         show_aabb_bounds = 0;
+         show_aabb_bounds = 0,
+         show_grid = 0;
+
+    v2f grid_size = {256.f, 256.f},
+        grid_offset = {0.f, 0.f};
 
     sf::Text fps_text(default_font),
                 node_info(default_font);
     sf::VertexArray axis_x(sf::PrimitiveType::LineStrip,5);
     sf::VertexArray axis_y(sf::PrimitiveType::LineStrip,5);
+
+    sf::VertexArray line(sf::PrimitiveType::LineStrip,2);
 
     void init(){
         default_font.setSmooth(0);
@@ -56,6 +62,9 @@ namespace debug{
     void showAABBBounds(){
         show_aabb_bounds = !show_aabb_bounds;
     }
+    void showGrid(){
+        show_grid = !show_grid;
+    }
     void showAll(){
         showFps();
         showSpatialName();
@@ -63,6 +72,7 @@ namespace debug{
         showPickedNodeInfo();
         showSpriteBounds();
         showAABBBounds();
+        showGrid();
     }
 
     sf::Text *spatial_name(string &name, sf::Color &debug_color){
@@ -93,7 +103,7 @@ namespace viewport{
 
     sf::Color bg_color;
 
-    priority_queue<DrawInfo> draw_queue;
+    priority_queue<DrawInfo, vector<DrawInfo>, std::greater<DrawInfo>> draw_queue;
 
     v2f cam_pos = {-480.f,-360.f};
     float zoom = 1.f;
@@ -161,6 +171,53 @@ namespace viewport{
             // cout << "trying to pop..." << '\n';
             draw_queue.pop();
             // cout << "successful i guess." << '\n';
+        }
+        if(debug::show_grid){
+            debug::line[0].color = debug::line[1].color = sf::Color(63, 63, 63);
+
+            debug::line[0].position.x = 0;
+            debug::line[1].position.x = res.x;
+            for(
+                float ys = (int)(cam_pos.y/debug::grid_size.y) *
+                debug::grid_size.y + debug::grid_offset.y; 
+                ys <= cam_pos.y + (res.y/zoom); 
+                ys += debug::grid_size.y
+            ){
+                debug::line[0].position.y =
+                debug::line[1].position.y = (ys-cam_pos.y) * zoom;
+                wind.draw(debug::line);
+            }
+
+            debug::line[0].position.y = 0;
+            debug::line[1].position.y = res.y;
+            for(
+                float xs = (int)(cam_pos.x/debug::grid_size.x) *
+                debug::grid_size.x + debug::grid_offset.x; 
+                xs <= cam_pos.x + (res.x/zoom); 
+                xs += debug::grid_size.x
+            ){
+                debug::line[0].position.x =
+                debug::line[1].position.x = (xs-cam_pos.x) * zoom;
+                wind.draw(debug::line);
+            }
+
+            debug::line[0].color = debug::line[1].color = sf::Color::Red;
+
+            debug::line[0].position.x = 0;
+            debug::line[1].position.x = res.x;
+
+            debug::line[0].position.y =
+            debug::line[1].position.y = -cam_pos.y * zoom;
+            wind.draw(debug::line);
+
+            debug::line[0].color = debug::line[1].color = sf::Color::Green;
+
+            debug::line[0].position.y = 0;
+            debug::line[1].position.y = res.y;
+
+            debug::line[0].position.x =
+            debug::line[1].position.x = -cam_pos.x * zoom;
+            wind.draw(debug::line);
         }
     }
 

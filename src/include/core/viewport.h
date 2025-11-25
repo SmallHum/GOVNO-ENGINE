@@ -48,12 +48,18 @@ namespace debug{
          show_spatial_origin,
          show_picked_node_info,
          show_sprite_bounds,
-         show_aabb_bounds;
+         show_aabb_bounds,
+         show_grid;
+
+    extern v2f grid_size,
+            grid_offset;
 
     extern sf::Text fps_text,
                 node_info;
     extern sf::VertexArray axis_x;
     extern sf::VertexArray axis_y;
+
+    extern sf::VertexArray line;
 
     void init();
 
@@ -78,7 +84,7 @@ namespace viewport{
 
     extern sf::Color bg_color;
 
-    extern priority_queue<DrawInfo> draw_queue;
+    extern priority_queue<DrawInfo, vector<DrawInfo>, std::greater<DrawInfo>> draw_queue;
 
     extern v2f cam_pos;
     extern float zoom;

@@ -338,19 +338,6 @@ namespace editor{
         return shared_ptr<Node>();
     }
 
-    namespace grid{
-        v2f size = {64.f, 64.f};
-        v2f offset;
-
-        void process(){
-            for(float ys = viewport::cam_pos.y; ys < viewport::zoom*viewport::res.y + viewport::cam_pos.y; ys += size.y){
-                v2f a = {0,ys - viewport::cam_pos.y},
-                    b = {viewport::res.x,ys - viewport::cam_pos.y};
-                ImGui::DrawLine(a, b, sf::Color::White);
-            }
-        }
-    };
-
     // namespace axis_gizmo{
     //     Spatial *s;
 
