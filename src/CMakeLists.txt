@@ -40,7 +40,8 @@ set(IMGUI_SFML_IMGUI_DEMO ON)
 FetchContent_MakeAvailable(imgui-sfml)
 
 add_executable(${PROJECT_NAME} 
-	tools/editor.cpp 
+	tools/editor.cpp
+	tools/history.cpp
 	
 	viewport.cpp 
 	assets.cpp 

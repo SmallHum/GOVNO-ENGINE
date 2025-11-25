@@ -3,7 +3,7 @@
 // Loads independent asset map, from file
 template <typename T>
 void Pack::loadAsset(
-        map<string, T> &assets_list, 
+        map<string, T*> &assets_list, 
         std::filesystem::path path
 ){
     if(std::filesystem::exists(path) && std::filesystem::is_directory(path)) {
@@ -23,7 +23,7 @@ void Pack::loadAsset(
                 // assets_list.insert(
                 //     pair<const string, T>(clear_name, T(str_path))
                 // );
-                assets_list.insert_or_assign(clear_name, T(str_path));
+                assets_list.insert_or_assign(clear_name, new T(str_path));
             }
     }
     else{
@@ -34,8 +34,8 @@ void Pack::loadAsset(
 // Loads a dependent asset map, from another asset map
 template <typename T, typename Dependency>
 void Pack::loadAsset(
-        map<string, T> &assets_list, 
-        map<string,Dependency> &d_map,
+        map<string, T*> &assets_list, 
+        map<string,Dependency*> &d_map,
         const string prefix_filter
 ){
     for(auto &i : d_map){
@@ -51,18 +51,33 @@ void Pack::loadAsset(
 
         if(not_prefix)continue;
 
-        assets_list.insert_or_assign(i.first, T(i.second));
+        assets_list.insert_or_assign(i.first, new T(*i.second));
     }
 }
 
+Pack::~Pack(){
+    for(auto &i : textures)
+        delete i.second;
+    for(auto &i : sprites)
+        delete i.second;
+    for(auto &i : music)
+        delete i.second;
+    for(auto &i : sound_buffers)
+        delete i.second;
+    for(auto &i : sfx)
+        delete i.second;
+    for(auto &i : fonts)
+        delete i.second;
+}
+
 template<typename Key, typename Val>
-Val &find(map<Key, Val> &map, Key key){
+Val &find(map<Key, Val*> &map, Key key){
     auto result = map.find(key);
     if(result == map.end()){
         cout << "Value by key " << key << "not found.\n";
         throw assets::not_found_exception;
     }
-    return result->second;
+    return *result->second;
 }
 
 namespace assets{
@@ -171,7 +186,7 @@ namespace assets{
         for(auto &i : packs){
             for(auto &j : i.second.fonts){
                 // cout << &j.second.atlas << ' ' << &font.atlas;
-                if(&j.second.atlas != &font.atlas)continue;
+                if(&j.second->atlas != &font.atlas)continue;
                 return i.first + ":" + j.first;
             }
         }
@@ -182,7 +197,7 @@ namespace assets{
         for(auto &i : packs){
             for(auto &j : i.second.sprites){
                 // cout << &j.second.atlas << ' ' << &font.atlas;
-                if(&j.second != &sprite)continue;
+                if(j.second != &sprite)continue;
                 return i.first + ":" + j.first;
             }
         }

@@ -7,21 +7,22 @@
 #include <structs/font.h>
 
 struct Pack{
-    map<string,sf::Texture> textures;
-    map<string,sf::Sprite> sprites;
-    map<string,sf::Music> music;
-    map<string,sf::SoundBuffer> sound_buffers;
-    map<string,sf::Sound> sfx;
-    map<string,GVEFont> fonts;
+    map<string,sf::Texture*> textures;
+    map<string,sf::Sprite*> sprites;
+    map<string,sf::Music*> music;
+    map<string,sf::SoundBuffer*> sound_buffers;
+    map<string,sf::Sound*> sfx;
+    map<string,GVEFont*> fonts;
 
     // Loads independent asset map, from file
     template <typename T>
-    void loadAsset(map<string, T> &assets_list, std::filesystem::path path);
+    void loadAsset(map<string, T*> &assets_list, std::filesystem::path path);
 
     // Loads a dependent asset map, from another asset map
     template <typename T, typename Dependency>
-    void loadAsset(map<string, T> &assets_list, map<string,Dependency> &d_map, const string prefix_filter = "");
+    void loadAsset(map<string, T*> &assets_list, map<string,Dependency*> &d_map, const string prefix_filter = "");
 
+    ~Pack();
 };
 
 namespace assets{

@@ -1,12 +1,6 @@
 #define EDITOR
 
-#include <core/controls.h>
-#include <core/assets.h>
-#include <core/viewport.h>
-#include <struct_loader.h>
-
-#include <imgui.h>
-#include <misc/cpp/imgui_stdlib.h>
+#include <core/history.h>
 #include <imgui-SFML.h>
 
 #define CTRL_DOWN (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || \
@@ -77,207 +71,11 @@ namespace editor{
     //     }
     // }
 
-    shared_ptr<Node> node_root;
-    shared_ptr<Node> selection;
+    extern shared_ptr<Node> node_root;
+    extern shared_ptr<Node> selection;
     size_t selection_depth = 0;
 
     int id_fix = 0;
-
-    namespace history{
-        struct Action{
-            bool failed = 0;
-
-            Action(){}
-
-            virtual void execute(){}
-            virtual void undo(){}
-        };
-
-        struct OnANode: Action{
-            shared_ptr<Node> selected_on_action;
-
-            OnANode(
-                shared_ptr<Node> selected_on_action = selection
-            ): Action(),
-                selected_on_action(selected_on_action)
-            {
-                failed = failed || !this->selected_on_action;
-                if(!this->selected_on_action){
-                    cout << failed << " SELECTED SOMEHOW DOESN'T SATISFY (OnANode constructor)\n";
-                }
-            }
-        };
-
-        struct AddNode: OnANode{
-            shared_ptr<Node> added;
-
-            AddNode(
-                shared_ptr<Node> added,
-                shared_ptr<Node> selected_on_action = selection
-            ): OnANode(selected_on_action),
-                added(added)
-            {
-                if(failed){
-                    cout << "SETTING SELECTED AS NODE ROOT...\n";
-                    failed = 0;
-                    this->selected_on_action = node_root;
-                }
-                failed = failed || !added;
-                if(!added){
-                    cout << failed << " ADDED SOMEHOW DOESN'T SATISFY (AddNode constructor)\n";
-                }
-            }
-
-            void execute() override{
-                selected_on_action->addChild(added);
-            }
-            void undo() override{
-                added->removeGently();
-            }
-        };
-
-        struct DeleteNode: OnANode{
-            shared_ptr<Node> parent;
-            size_t del_index;
-
-            DeleteNode(
-                shared_ptr<Node> selected_on_action = selection
-            ): OnANode(selected_on_action)
-            {
-                if(failed)return;
-
-                this->parent = this->selected_on_action->parent.lock();
-                del_index = this->selected_on_action->parent_index;
-
-                failed = failed || !this->parent;
-                if(!this->parent){
-                    cout << failed << " PARENT SOMEHOW DOESN'T SATISFY (DeleteNode constructor)\n";
-                }
-            }
-
-            void execute() override{
-                // cout << "action execute begins\n";
-                parent->removeChild(selected_on_action);
-                // cout << "called removechild succesfully\n";
-
-                selection.reset();
-            }
-            void undo() override{
-                parent->addChild(selected_on_action, del_index);
-            }
-        };
-
-        template <typename T>
-        struct Apply: OnANode{
-            T before;
-            T after;
-            T &link;
-
-            Apply(
-                T before,
-                T after,
-                T &link,
-                shared_ptr<Node> selected_on_action = selection
-            ): OnANode(selected_on_action),
-            before(before),
-            after(after),
-            link(link)
-            {}
-
-            void execute(){
-                link = after;
-            }
-            void undo(){
-                link = before;
-            }
-        };
-
-        size_t history_size;
-        Action **undo_data,
-                **redo_data;
-
-        size_t undo_end,
-                redo_end;
-
-        void init(size_t size){
-            history_size = size;
-
-            undo_end = redo_end = 0;
-
-            undo_data = new Action*[size];
-            redo_data = new Action*[size];
-        }
-
-        void logData(){
-            cout << "UNDO DATA:\n";
-            for(int i = 0; i < undo_end; i++){
-                cout << ((size_t)undo_data[i])%0x1000 << ' ';
-            }
-            cout << '\n';
-            cout << "REDO DATA:\n";
-            for(int i = 0; i < redo_end; i++){
-                cout << ((size_t)redo_data[i])%0x1000 << ' ';
-            }
-            cout << "\n---------\n";
-        }
-
-        void act(Action *a){
-            if(a->failed){
-                cout << "FAILED (editor::history::act)\n";
-                delete a;
-                cout << "ACTION OBJECT DELETED (editor::history::act)\n";
-                return;
-            }
-
-            if(undo_end == history_size){
-                delete undo_data[0];
-                for(size_t i = 1; i < history_size; i++){
-                    undo_data[i-1] = undo_data[i];
-                }
-            }
-
-            undo_data[undo_end++] = a;
-            a->execute();
-
-            for(size_t i = 0; i < redo_end; i++)delete redo_data[i];
-            redo_end = 0;
-
-            // logData();
-        }
-
-        void undo(){
-            if(undo_end == 0){
-                cout << "I EITHER FORGOR OR THERE'S NOTHING TO BE UNDONE\n";
-                return;
-            }
-            // cout << "trying to undo...\n";
-            undo_data[undo_end-1]->undo();
-            // cout << "trying to fetch undo top to redo...\n";
-            redo_data[redo_end++] = undo_data[--undo_end];
-
-            // logData();
-        }
-
-        void redo(){
-            if(redo_end == 0){
-                cout << "I EITHER FORGOR OR THERE'S NOTHING TO BE REDONE\n";
-                return;
-            }
-            // cout << "trying to redo...\n";
-            redo_data[redo_end-1]->execute();
-            // cout << "trying to fetch redo top back to undo...\n";
-            undo_data[undo_end++] = redo_data[--redo_end];
-
-            // logData();
-        }
-
-        void exit(){
-            for(size_t i = 0; i < undo_end; i++) delete undo_data[i];
-            for(size_t i = 0; i < redo_end; i++) delete redo_data[i];
-            delete[] undo_data;
-            delete[] redo_data;
-        }
-    };
 
     inline bool newWindow(
         const char *label,
@@ -324,7 +122,8 @@ namespace editor{
 
     template<typename T>
     bool apply(
-        const string &label, T &v, const T &buffer
+        const string &label, T &v, const T &buffer, 
+        bool documentate = true
         // const function<void(T&, const K&)> applier = [](T &v, const K &buffer){
         //     v = buffer;
         // }
@@ -335,7 +134,10 @@ namespace editor{
         
         cout << "applying " << label << "...\n";
         // applier(v, buffer);
-        history::act(new history::Apply<T>(v, buffer, v));
+        if(documentate)
+            history::act(new history::Apply<T>(v, buffer, v));
+        else
+            v = buffer;
 
         return true;
     }
@@ -344,34 +146,34 @@ namespace editor{
         return ImGui::Checkbox(label.c_str(), &v);
     }
 
-    bool editFieldFloat(string label, float &v){
+    bool editFieldFloat(string label, float &v, bool doc = true){
         float buffer = v;
 
         if(!ImGui::InputFloat(label.c_str(), &buffer))
             return false;
 
-        return apply(label, v, buffer);
+        return apply(label, v, buffer, doc);
     }
 
-    bool editFieldInt(string label, int &v){
+    bool editFieldInt(string label, int &v, bool doc = true){
         int buffer = v;
 
         if(!ImGui::InputInt(label.c_str(), &buffer))
             return false;
 
-        return apply(label, v, buffer);
+        return apply(label, v, buffer, doc);
     }
 
-    bool editFieldV2F(string label, v2f &v){
+    bool editFieldV2F(string label, v2f &v, bool doc = true){
         float buffer[2] = {v.x, v.y};
 
         if(!ImGui::InputFloat2(label.c_str(), buffer))
             return false;
         
-        return apply(label, v, v2f(buffer[0], buffer[1]));
+        return apply(label, v, v2f(buffer[0], buffer[1]), doc);
     }
 
-    bool editFieldString(string label, string &v, bool multiline = 0, bool cp1251 = false){
+    bool editFieldString(string label, string &v, bool multiline = 0, bool doc = true){
         string buffer = v;
 
         // ImGui::PushID(id_fix++);
@@ -392,12 +194,12 @@ namespace editor{
         //     }}
         // );
 
-        return apply(label, v, buffer);
+        return apply(label, v, buffer, doc);
     }
 
     bool editFieldSprite(sf::Sprite *&sprite){
         string buffer = assets::getSpriteName(*sprite);
-        if(!editFieldString("Sprite", buffer))
+        if(!editFieldString("Sprite", buffer, false, false))
             return 0;
         
         cout << "    applying sprite for real now" << '\n';
@@ -410,7 +212,7 @@ namespace editor{
 
     bool editFieldFont(GVEFont *&font){
         string buffer = assets::getFontName(*font);
-        if(!editFieldString("Font", buffer))
+        if(!editFieldString("Font", buffer, false, false))
             return 0;
         
         cout << "    applying font for real now" << '\n';
@@ -510,8 +312,8 @@ namespace editor{
         }
     }
 
-    bool isIntersecting(v2f a, v2f b){
-        return (a-b).length() <= sel_margin;
+    bool isIntersecting(v2f a, v2f b, float margin = sel_margin / viewport::zoom){
+        return (a-b).length() <= margin;
     }
 
     shared_ptr<Node> getHovered(shared_ptr<Node> root, size_t depth = 0){
@@ -534,6 +336,33 @@ namespace editor{
         selection_depth = 0;
         return shared_ptr<Node>();
     }
+
+    namespace grid{
+        v2f size = {64.f, 64.f};
+        v2f offset;
+
+        void process(){
+            for(float ys = viewport::cam_pos.y; ys < viewport::zoom*viewport::res.y + viewport::cam_pos.y; ys += size.y){
+                v2f a = {0,ys - viewport::cam_pos.y},
+                    b = {viewport::res.x,ys - viewport::cam_pos.y};
+                ImGui::DrawLine(a, b, sf::Color::White);
+            }
+        }
+    };
+
+    // namespace axis_gizmo{
+    //     Spatial *s;
+
+    //     void process(){
+    //         s = dynamic_cast<Spatial*>(selection.get());
+    //     }
+
+    //     void move(){
+    //         if(!s)return;
+
+
+    //     }
+    // };
 
     void menuProc(float &dt){
         if(ImGui::BeginMainMenuBar()){
