@@ -28,9 +28,8 @@ struct Pack{
 namespace assets{
     extern map<string,Pack> packs;
 
-    extern std::exception not_found_exception;
-
     void init();
+    void exit();
 
     void loadPack(string pack_name);
     void unloadPack(string pack_name);

@@ -1,4 +1,5 @@
 #define EDITOR
+#define GVE_ENABLE_ASSERT
 
 #include <core/history.h>
 #include <imgui-SFML.h>
@@ -723,9 +724,12 @@ void init(){
     }
 }
 
-void exit(){
+static void exit(){
     viewport::exit();
     editor::exit();
+    assets::exit();
+
+    std::exit(0);
 }
 
 int main(){

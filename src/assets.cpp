@@ -75,7 +75,7 @@ Val &find(map<Key, Val*> &map, Key key){
     auto result = map.find(key);
     if(result == map.end()){
         cout << "Value by key " << key << "not found.\n";
-        throw assets::not_found_exception;
+        throw std::exception();
     }
     return *result->second;
 }
@@ -83,16 +83,17 @@ Val &find(map<Key, Val*> &map, Key key){
 namespace assets{
     std::map<std::string,Pack> packs;
 
-    std::exception not_found_exception;
-
     void init(){
         loadPack("main");
-        not_found_exception = std::exception();
         // setlocale(LC_ALL, "Rus");
 
         // NO WINDOWS ANYMORE HAHA
         // SetConsoleCP(1251);
         // SetConsoleOutputCP(1251);
+    }
+
+    void exit(){
+        packs.clear();
     }
 
     void loadPack(string pack_name){

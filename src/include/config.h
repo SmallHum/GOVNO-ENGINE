@@ -51,7 +51,7 @@ using std::cin, std::cout,
 
 const static int debug_info_z = 9999;
 
-static sf::Color hsv(unsigned int h, unsigned int s = 100, unsigned int v = 100){
+static inline sf::Color hsv(unsigned int h, unsigned int s = 100, unsigned int v = 100){
     unsigned int r, g, b;
     h = h%360;
     s = s%101;
@@ -119,5 +119,22 @@ static std::ostream& operator << (std::ostream& s, mat3 v){
         s << v.getMatrix()[i] << ' ';
     return s;
 }
+
+static void exit();
+static inline void error(const char* expr, const char* filename, int line){
+    cout << "IN " << filename << " LINE " << line << '\n';
+    cout << "ERROR: EXPRESSION\n" << expr << "\nASSERTED FALSE.\n";
+}
+
+    #ifdef GVE_ENABLE_ASSERT
+    #define GVE_ASSERT(expr)                        \
+        if(expr){}                                  \
+        else{                                       \
+            error(#expr,__FILE__,__LINE__);         \
+            exit();                                 \
+        }
+    #else
+    #define GVE_ASSERT(expr)
+    #endif
 
 #endif
